@@ -1,6 +1,6 @@
 import { calculateSunMoonLongitudes, normalizeDegrees } from "./swiss_wrapper.js";
 import { calculatePlanetaryPositions } from "./planet_engine.js";
-
+import SwissEph from "./swisseph/swisseph.js";
 const NAKSHATRAS = [
     "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", 
     "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", 
