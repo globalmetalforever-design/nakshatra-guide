@@ -1,4 +1,4 @@
-import SwissEph from "../../Swiss Ephemeris/src/swisseph.js";
+import SwissEph from "./swisseph/swisseph.js";
 
 let swissPromise = null;
 
