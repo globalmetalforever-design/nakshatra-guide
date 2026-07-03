@@ -46,9 +46,15 @@ function toUtcDateParts(year, month, day, hour, minute, timezone) {
 async function getSwiss() {
     if (!swissPromise) {
         swissPromise = (async () => {
-            // Updated to handle both global namespaces safely
-            const EphemerisEngine = window.SwissEph || window.swisseph?.SwissEph;
-            
+            // Safely extract the constructor from the web bundle structure
+            let EphemerisEngine = null;
+
+            if (window.swisseph && window.swisseph.SwissEph) {
+                EphemerisEngine = window.swisseph.SwissEph;
+            } else if (window.SwissEph) {
+                EphemerisEngine = window.SwissEph;
+            }
+
             if (!EphemerisEngine) {
                 throw new Error("Swiss Ephemeris core calculation engine was not loaded via CDN.");
             }
