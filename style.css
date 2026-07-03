@@ -1,0 +1,186 @@
+body{
+    background:#071633;
+    color:#ffd36b;
+    font-family:Arial,sans-serif;
+    margin:0;
+}
+/* Forecast body text */
+#forecastText,
+#attentionText,
+#guidanceText,
+#historyText {
+    color: #ffffff;
+}
+
+/* If paragraphs are used inside the cards */
+.forecast-card p,
+.guidance-card p,
+.attention-card p,
+.history-card p {
+    color: #ffffff;
+}
+.container{
+    width:90%;
+    max-width:1400px;
+    margin:auto;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+}
+
+.top-panels{
+    display:grid;
+    grid-template-columns:70% 28%;
+    gap:20px;
+}
+
+.birth-panel{
+    display:flex;
+flex-direction:column;
+}
+.nakshatra-panel{
+display:flex;
+flex-direction:column;
+justify-content:flex-start;
+}
+.top-section{
+    display:flex;
+    gap:10px;
+    align-items:stretch;
+}
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-top:20px;
+}
+
+.panel{
+    background:#12254f;
+    border:1px solid #caa437;
+    border-radius:10px;
+    padding:10px;
+    margin-bottom:20px;
+}
+
+label{
+    display:block;
+    margin-top:15px;
+    margin-bottom:5px;
+}
+
+input,
+select{
+    width:100%;
+    padding:12px;
+    border-radius:6px;
+    border:1px solid #caa437;
+    background:#0f2045;
+    color:white;
+    box-sizing:border-box;
+}
+
+.time-row{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:10px;
+}
+
+button{
+    margin-top:20px;
+    padding:12px 25px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    background:#caa437;
+    color:#071633;
+    font-weight:bold;
+}
+
+.action-row{
+    display:flex;
+    gap:10px;
+}
+
+#detectedNakshatra{
+    font-size:32px;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+#detectedPada{
+    font-size:22px;
+    margin-top:10px;
+}
+
+@media(max-width:768px){
+
+    .top-panels{
+        grid-template-columns:1fr;
+    }
+
+    .row{
+        grid-template-columns:1fr;
+    }
+
+}
+
+.error-text{
+    color:#ff8b8b;
+}
+/* ---------- Forecast Output ---------- */
+
+#forecastArea p,
+#forecastArea span {
+    color: #ffffff;
+}
+
+/* Keep headings gold */
+
+#forecastArea h2,
+#forecastArea h3 {
+    color: #ffd166;
+}
+
+/* Guidance labels */
+
+#forecastArea p {
+    color: #ffffff;
+    line-height: 1.7;
+}
+
+/* Guidance values */
+
+#luckyColor,
+#luckyNumber,
+#goodTime,
+#avoidTime,
+#dailyAction {
+    color: #ffffff;
+    font-weight: 600;
+}
+/* Forecast output */
+#forecastBox,
+#attentionBox {
+    padding-top: 8px;
+    font-size: 1.15rem;
+    color: #ffffff;
+    line-height: 1.7;
+}
+
+/* Guidance values */
+#luckyColor,
+#luckyNumber,
+#goodTime,
+#avoidTime,
+#dailyAction {
+    color: #ffffff;
+}
+
+/* Keep headings gold */
+.panel h2,
+.panel h3 {
+    color: #ffd36b;
+}
