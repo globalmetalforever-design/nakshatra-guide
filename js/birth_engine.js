@@ -46,14 +46,14 @@ function toUtcDateParts(year, month, day, hour, minute, timezone) {
 async function getSwiss() {
     if (!swissPromise) {
         swissPromise = (async () => {
-            // Target the global SwissEph constructor provided by the CDN script tag
-            const GlobalSwissEph = window.SwissEph || (window.swisseph ? window.swisseph.SwissEph : null);
+            // Updated to handle both global namespaces safely
+            const EphemerisEngine = window.SwissEph || window.swisseph?.SwissEph;
             
-            if (!GlobalSwissEph) {
-                throw new Error("SwissEph calculation engine failed to mount globally.");
+            if (!EphemerisEngine) {
+                throw new Error("Swiss Ephemeris core calculation engine was not loaded via CDN.");
             }
 
-            const swe = new GlobalSwissEph();
+            const swe = new EphemerisEngine();
             await swe.initSwissEph();
             swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
             return swe;
@@ -61,7 +61,6 @@ async function getSwiss() {
     }
     return swissPromise;
 }
-
 export async function calculateSunMoonLongitudes(birthInput) {
     const parts = normalizeBirthInput(birthInput);
     const swe = await getSwiss();
