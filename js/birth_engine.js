@@ -211,8 +211,8 @@ export {
     getJulianDayFromBirthTime,
     getSwiss,
     normalizeBirthInput,
-    normalizeDegrees,
-    getBirthData  
+    normalizeDegrees
+getBirthData
 };
 
 if (typeof window !== "undefined") {
@@ -224,5 +224,6 @@ if (typeof window !== "undefined") {
         getSwiss,
         normalizeBirthInput,
         normalizeDegrees
+getBirthData
     };
 }
