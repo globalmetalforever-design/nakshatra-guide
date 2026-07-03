@@ -1,6 +1,3 @@
-// Import the ephemeris library directly as a clean relative module
-import SwissEph from "./swisseph/swisseph.js";
-
 let swissPromise = null;
 
 const SECONDS_PER_HOUR = 3600000;
@@ -49,8 +46,14 @@ function toUtcDateParts(year, month, day, hour, minute, timezone) {
 async function getSwiss() {
     if (!swissPromise) {
         swissPromise = (async () => {
-            // Instantiate directly using the clean module import
-            const swe = new SwissEph();
+            // Target the global SwissEph constructor provided by the CDN script tag
+            const GlobalSwissEph = window.SwissEph || (window.swisseph ? window.swisseph.SwissEph : null);
+            
+            if (!GlobalSwissEph) {
+                throw new Error("SwissEph calculation engine failed to mount globally.");
+            }
+
+            const swe = new GlobalSwissEph();
             await swe.initSwissEph();
             swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
             return swe;
