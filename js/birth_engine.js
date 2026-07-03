@@ -1,8 +1,10 @@
+// Import the ephemeris library directly as a clean relative module
+import SwissEph from "./swisseph/swisseph.js";
+
 let swissPromise = null;
 
 const SECONDS_PER_HOUR = 3600000;
 
-// NAKSHATRA & RASI CONSTANTS FOR MAPPING
 const NAKSHATRAS = [
     "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", 
     "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", 
@@ -47,11 +49,8 @@ function toUtcDateParts(year, month, day, hour, minute, timezone) {
 async function getSwiss() {
     if (!swissPromise) {
         swissPromise = (async () => {
-            const GlobalSwissEph = window.SwissEph || SwissEph;
-            if (!GlobalSwissEph) {
-                throw new Error("SwissEph library was not loaded into global scope.");
-            }
-            const swe = new GlobalSwissEph();
+            // Instantiate directly using the clean module import
+            const swe = new SwissEph();
             await swe.initSwissEph();
             swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
             return swe;
@@ -94,24 +93,19 @@ export async function calculateMoonLongitudes(birthInput) {
     return calculateSunMoonLongitudes(birthInput);
 }
 
-// --- THE MISSING BRIDGE FUNCTION THAT FIXES INDEX_APP.JS ---
 export async function getBirthData(birthInput) {
     const longitudes = await calculateSunMoonLongitudes(birthInput);
     
-    // Calculate Nakshatra (27 divisions of 360 degrees = 13.3333 degrees each)
     const nakshatraTotalDegrees = 360 / 27; 
     const nakshatraIndex = Math.floor(longitudes.siderealMoonLongitude / nakshatraTotalDegrees);
     const nakshatraName = NAKSHATRAS[nakshatraIndex];
 
-    // Calculate Pada (4 Padas per Nakshatra = 3.3333 degrees each)
     const remainingDegrees = longitudes.siderealMoonLongitude % nakshatraTotalDegrees;
     const padaNumber = Math.floor(remainingDegrees / (nakshatraTotalDegrees / 4)) + 1;
 
-    // Calculate Vedic Rasi (12 signs of 30 degrees each)
     const rasiIndex = Math.floor(longitudes.siderealMoonLongitude / 30);
     const rasiName = RASIS[rasiIndex];
 
-    // Calculate Western Sun Sign (12 signs of 30 degrees each using Tropical Longitude)
     const westernIndex = Math.floor(longitudes.tropicalSunLongitude / 30);
     const westernName = WESTERN_ZODIAC[westernIndex];
 
