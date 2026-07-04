@@ -1,4 +1,5 @@
-import { calculateSunMoonLongitudes, normalizeDegrees } from "./birth_engine.js";
+import { calculateSunMoonLongitudes, normalizeDegrees } from "./swiss_wrapper.js";
+
 const RASI_NAMES = [
     "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
     "Tula", "Vrishchika", "Dhanu", "Makara", "Kumbha", "Meena"

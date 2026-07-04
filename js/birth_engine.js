@@ -1,9 +1,10 @@
-import Swisseph from "https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src/swisseph.js";
+import * as SwissEphModule from "./swisseph/swisseph.js";
 
 let swissPromise = null;
+
 const SECONDS_PER_HOUR = 3600000;
 
-export const NAKSHATRAS = [
+const NAKSHATRAS = [
     "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", 
     "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", 
     "Hasta", "Chitra", "Swati", "Visakha", "Anuradha", "Jyeshtha", 
@@ -11,17 +12,17 @@ export const NAKSHATRAS = [
     "Purva Bhadrapada", "Uttara Bhadrapada", "Revati"
 ];
 
-export const RASIS = [
+const RASIS = [
     "Mesha", "Vrishabha", "Mithuna", "Karka", "Simha", "Kanya",
     "Tula", "Vrischika", "Dhanu", "Makara", "Kumbha", "Meena"
 ];
 
-export const WESTERN_ZODIAC = [
+const WESTERN_ZODIAC = [
     "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
     "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
 ];
 
-export function assertFiniteNumber(value, name) {
+function assertFiniteNumber(value, name) {
     const numberValue = Number(value);
     if (!Number.isFinite(numberValue)) {
         throw new TypeError(`${name} must be a finite number.`);
@@ -29,11 +30,11 @@ export function assertFiniteNumber(value, name) {
     return numberValue;
 }
 
-export function normalizeDegrees(degrees) {
+function normalizeDegrees(degrees) {
     return ((degrees % 360) + 360) % 360;
 }
 
-export function toUtcDateParts(year, month, day, hour, minute, timezone) {
+function toUtcDateParts(year, month, day, hour, minute, timezone) {
     const utcMillis = Date.UTC(year, month - 1, day, hour, minute, 0, 0) - (timezone * SECONDS_PER_HOUR);
     const utcDate = new Date(utcMillis);
     return {
@@ -44,10 +45,17 @@ export function toUtcDateParts(year, month, day, hour, minute, timezone) {
     };
 }
 
-export async function getSwiss() {
+async function getSwiss() {
     if (!swissPromise) {
         swissPromise = (async () => {
-            const swe = new Swisseph();
+            // Find the constructor inside the imported module namespace
+            const EphemerisEngine = SwissEphModule.Swisseph || SwissEphModule.default || SwissEphModule.SwissEph;
+
+            if (!EphemerisEngine) {
+                throw new Error("Could not find the Swisseph constructor inside the module exports.");
+            }
+
+            const swe = new EphemerisEngine();
             await swe.initSwissEph();
             swe.set_sid_mode(swe.SE_SIDM_LAHIRI, 0, 0);
             return swe;
@@ -63,14 +71,12 @@ export async function calculateSunMoonLongitudes(birthInput) {
     const utc = toUtcDateParts(parts.year, parts.month, parts.day, parts.hour, parts.minute, parts.timezone);
     const julianDay = swe.julday(utc.year, utc.month, utc.day, utc.hour);
 
-    // 1. Run raw ephemeris data calculations
     const siderealSun = swe.calc_ut(julianDay, swe.SE_SUN, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     const siderealMoon = swe.calc_ut(julianDay, swe.SE_MOON, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     const tropicalSun = swe.calc_ut(julianDay, swe.SE_SUN, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED);
     const tropicalMoon = swe.calc_ut(julianDay, swe.SE_MOON, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED);
     const ayanamsa = swe.get_ayanamsa_ut(julianDay);
 
-    // 2. Map strictly ordered clean sequential variables
     const sunSiderealLong = normalizeDegrees(siderealSun[0]);
     const moonSiderealLong = normalizeDegrees(siderealMoon[0]);
     const elongation = normalizeDegrees(moonSiderealLong - sunSiderealLong);

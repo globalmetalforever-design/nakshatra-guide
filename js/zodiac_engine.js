@@ -1,4 +1,5 @@
-import { normalizeDegrees } from "./birth_engine.js";
+import { normalizeDegrees } from "./swiss_wrapper.js";
+
 const ZODIAC_SIZE = 30;
 
 const zodiacNames = [

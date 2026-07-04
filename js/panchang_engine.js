@@ -1,4 +1,4 @@
-import { calculateSunMoonLongitudes, normalizeDegrees } from "./birth_engine.js?v=12";
+import { calculateSunMoonLongitudes, normalizeDegrees } from "./swiss_wrapper.js";
 
 const TITHIS = [
     "Pratipada","Dvitiya","Tritiya","Chaturthi","Panchami",
@@ -33,41 +33,49 @@ const YOGAS = [
     "Indra","Vaidhriti"
 ];
 
-export async function getTodayPanchang(birthInput, targetDate = new Date()) {
-    // Extract properties defensively to support multiple naming schemas (e.g., hour vs birthHour)
-    const year = birthInput.year || birthInput.birthYear;
-    const month = birthInput.month || birthInput.birthMonth;
-    const day = birthInput.day || birthInput.birthDay;
-    const hour = birthInput.hour !== undefined ? birthInput.hour : birthInput.birthHour;
-    const minute = birthInput.minute !== undefined ? birthInput.minute : (birthInput.birthMinute ?? 0);
-    const timezone = birthInput.timezone !== undefined ? birthInput.timezone : (birthInput.birthTimezone ?? 0);
-
-    // 1. Structure the target date fields cleanly for the ephemeris reader
-    const targetInput = {
-        year: targetDate.getFullYear(),
-        month: targetDate.getMonth() + 1,
-        day: targetDate.getDate(),
-        hour: hour,
-        minute: minute,
-        timezone: timezone
+export async function getTodayPanchang(date = new Date()) {
+    // CRITICAL ENGINES REFACTOR: We map variables strictly from the explicit date argument instance
+    const birthInput = {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1,
+        day: date.getDate(),
+        hour: date.getHours(),
+        minute: date.getMinutes(),
+        timezone: -date.getTimezoneOffset() / 60
     };
 
-    // 2. Fetch the true planet positions for this specific target calendar day
-    const positions = await calculateSunMoonLongitudes(targetInput);
-    
-    // 3. Compute transit Nakshatra indexes for this date
-    const nakshatraTotalDegrees = 360 / 27;
-    const nakshatraIndex = Math.floor(positions.siderealMoonLongitude / nakshatraTotalDegrees);
-    
-    // 4. Compute transit Tithi (Elongation tracking)
-    const tithiIndex = Math.floor(positions.elongation / 12);
+    const astro = await calculateSunMoonLongitudes(birthInput);
+
+    const ayanamsa = astro.ayanamsa;
+    const sunSidereal = normalizeDegrees(astro.tropicalSunLongitude - ayanamsa);
+    const moonSidereal = astro.siderealMoonLongitude; 
+
+    const elongation = normalizeDegrees(moonSidereal - sunSidereal);
+    const tithiIndex = Math.min(Math.floor(elongation / 12), 29);
+
+    const yogaIndex = Math.min(
+        Math.floor(normalizeDegrees(sunSidereal + moonSidereal) / (360 / 27)),
+        26
+    );
+
+    const totalHalfTithis = Math.floor(elongation / 6);
+    let karanaName = "";
+
+    if (totalHalfTithis === 0) {
+        karanaName = "Kimstughna";
+    } else if (totalHalfTithis >= 57) {
+        if (totalHalfTithis === 57) karanaName = "Shakuni";
+        else if (totalHalfTithis === 58) karanaName = "Chatuspada";
+        else karanaName = "Naga";
+    } else {
+        karanaName = KARANAS[(totalHalfTithis - 1) % 7];
+    }
 
     return {
-        julianDay: positions.julianDay,
-        siderealMoonLongitude: positions.siderealMoonLongitude,
-        siderealSunLongitude: positions.siderealSunLongitude,
-        nakshatraIndex: nakshatraIndex,
-        tithiIndex: tithiIndex,
-        isWaxing: positions.isWaxing
+        date: date.toISOString().slice(0, 10),
+        vara: WEEKDAYS[date.getDay()],
+        tithi: TITHIS[tithiIndex],
+        yoga: YOGAS[yogaIndex],
+        karana: karanaName
     };
 }

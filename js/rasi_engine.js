@@ -1,4 +1,4 @@
-import { normalizeDegrees } from "./birth_engine.js";
+import { normalizeDegrees } from "./swiss_wrapper.js";
 
 const RASI_SIZE = 30;
 
