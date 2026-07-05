@@ -1,134 +1,78 @@
-//import { getTodayPanchang } from "./panchang_engine.js";
+import { getTodayPanchang } from "./panchang_engine.js?v=13";
 
-const SCORE_CATEGORIES = ["finance", "initiative", "relationships", "learning", "health"];
-
-function emptyScores() {
-    return { finance: 0, initiative: 0, relationships: 0, learning: 0, health: 0 };
-}
-
-function getScoreBand(score) {
-    if (score >= 15) return "excellent";
-    if (score >= 5) return "good";
-    if (score >= -5) return "neutral";
-    if (score >= -15) return "challenging";
-    return "difficult";
-}
-
-function getTopCategory(scores) {
-    let max = -Infinity;
-    let cat = "learning";
-    Object.entries(scores).forEach(([k, v]) => {
-        if (v > max) { max = v; cat = k; }
-    });
-    return { category: cat, score: max };
-}
-
-function getAttentionCategory(scores) {
-    let min = Infinity;
-    let cat = "health";
-    Object.entries(scores).forEach(([k, v]) => {
-        if (v < min) { min = v; cat = k; }
-    });
-    return { category: cat, score: min };
-}
-
-function formatCategory(cat) {
-    return cat.charAt(0).toUpperCase() + cat.slice(1);
-}
-
-function synthesizeDynamicNarrative(band, topCat, attCat, birthData) {
-    const nakName = birthData?.nakshatra?.name || "your birth star";
-    const rasiName = birthData?.rasi?.name || "your Moon sign";
-    const padaNum = birthData?.pada?.number || 1;
-
-    let introText = "";
-    if (band === "excellent" || band === "good") {
-        introText = `The planetary movements for this target date emphasize the natural resonance of **${nakName}** (Pada ${padaNum}). The transit velocities trigger high internal initiative and a driving focus to navigate ongoing objectives. `;
-    } else if (band === "neutral") {
-        introText = `The planetary trends operate at a highly stable, integrated frequency for **${nakName}** on this date. It provides a balanced structural window to lay foundations without sudden disruptions. `;
-    } else {
-        introText = `The surrounding cosmic configurations represent a distinct structural checkpoint for **${nakName}**. Energy vectors pull inward, prioritizing cautious stabilization over outer expansion. `;
+/**
+ * Generates personalized daily forecasts, attention metrics, and lifestyle guidance
+ * by comparing birth chart positions against dynamic daily transit data.
+ */
+export async function generateDailyForecast(birthProfile, targetDate = new Date()) {
+    if (!birthProfile || !birthProfile.nakshatra) {
+        return {
+            forecast: "Please enter your birth profile details.",
+            attention: "Birth details required.",
+            guidance: { luckyColor: "-", luckyNumber: "-", goodTime: "-", badTime: "-", action: "-" }
+        };
     }
 
-    let actionText = "";
-    switch (band) {
-        case "excellent":
-            actionText = `With an elevated transit score, your capacity for swift problem-solving is fully maximized. Currents in your **${rasiName}** sector reveal an open alignment for professional advancement. `;
-            break;
-        case "good":
-            actionText = `This alignment brings positive growth trajectories. It represents a highly favorable window to address intricate projects demanding close technical management. `;
-            break;
-        case "neutral":
-            actionText = `Development fields advance at a measured, rhythmic pace. Your core planetary attributes indicate routine projects can be executed with excellent operational clarity. `;
-            break;
-        default:
-            actionText = `Expect a temporary slowing of external momentum. Forcing rapid completions on this day introduces friction; conserve your energies through strategic pacing. `;
-    }
+    const dailyPanchang = await getTodayPanchang(birthProfile, targetDate);
 
-    let closingText = `A path of least resistance and greatest emotional alignment on this day highlights your **${formatCategory(topCat.category)}** domain.`;
-
-    return introText + actionText + closingText;
-}
-
-function synthesizeAttentionNarrative(band, attCat, birthData) {
-    const nakName = birthData?.nakshatra?.name || "your birth star";
-    const rasiName = birthData?.rasi?.name || "your Moon sign";
-    const formattedCat = formatCategory(attCat.category);
-    
-    let text = `Your core awareness should look closely over your **${formattedCat}** domain during this transit window. `;
-
-    if (band === "excellent") {
-        text += `Even within highly charged periods, minor blind spots can cause friction. Your native **${nakName}** setup suggests monitoring details closely in the **${rasiName}** sector to prevent sudden operational oversights. `;
-    } else if (band === "good") {
-        text += `With supportive alignments dominant, minor leaks in focus represent your only real vulnerability. Keep tabs on the structural conditions of your **${rasiName}** placement to avoid scattered efforts. `;
-    } else if (band === "neutral") {
-        text += `Under balanced transit paths, the **${rasiName}** environment requests mindful upkeep rather than radical adjustments. Your **${nakName}** core profile may show slight fatigue or low patience with repeating tasks here. `;
-    } else {
-        text += `Planetary alignments create direct atmospheric resistance, which can manifest as elevated processing delays or friction points inside your **${rasiName}** structural house. `;
-    }
-
-    return text;
-}
-
-export async function generateDailyForecast(birthData, targetDate = new Date()) {
-    // Both DOB and History hit this exact line now
-    const panchang = await getTodayPanchang(targetDate);
-    
-    const daySeed = targetDate.getDate();
-    const monthSeed = targetDate.getMonth() + 1;
-    const yearSeed = targetDate.getFullYear();
-    const nakNum = birthData?.nakshatra?.number || 1;
-    
-    // High variance calculation seed so different dates yield completely different results
-    const seed = (daySeed * 7) + (monthSeed * 31) + (yearSeed ^ 7) + nakNum;
-    const goodStart = 8 + (Math.abs(seed) % 5);
-    const avoidStart = 14 + (Math.abs(seed) % 4);
-
-    const scores = emptyScores();
-    scores.finance = ((daySeed * monthSeed) % 11) - 4;
-    scores.initiative = ((yearSeed - daySeed) % 9) - 3;
-    scores.relationships = ((monthSeed * yearSeed) % 13) - 6;
-    scores.learning = ((daySeed + yearSeed) % 7) - 2;
-    scores.health = ((monthSeed + daySeed) % 8) - 4;
-
-    const totalScore = Object.values(scores).reduce((total, value) => total + value, 0);
-    const band = getScoreBand(totalScore);
-    const topCategory = getTopCategory(scores);
-    const attentionCategory = getAttentionCategory(scores);
+    const forecastText = computePersonalizedForecast(birthProfile.nakshatra.number, dailyPanchang.nakshatraIndex);
+    const attentionText = computePersonalizedAttention(birthProfile.rasi.number, dailyPanchang.siderealMoonLongitude);
+    const guidanceMetrics = computeLifestyleGuidance(birthProfile.nakshatra.number, dailyPanchang.nakshatraIndex);
 
     return {
-        panchang,
-        scores,
-        totalScore,
-        band,
-        forecast: synthesizeDynamicNarrative(band, topCategory, attentionCategory, birthData),
-        attention: synthesizeAttentionNarrative(band, attentionCategory, birthData),
-        guidance: {
-            luckyColor: Math.abs(seed) % 3 === 0 ? "Gold" : (Math.abs(seed) % 3 === 1 ? "Crimson" : "Royal Blue"),
-            luckyNumber: (Math.abs(seed) % 9) + 1,
-            goodTime: `${String(goodStart).padStart(2, "0")}:00 - ${String(goodStart + 1).padStart(2, "0")}:00`,
-            badTime: `${String(avoidStart).padStart(2, "0")}:30 - ${String(avoidStart + 1).padStart(2, "0")}:30`,
-            action: Math.abs(seed) % 2 === 0 ? "Anchor your space using conscious breathing patterns." : "Engage in silent reflection."
-        }
+        forecast: forecastText,
+        attention: attentionText,
+        guidance: guidanceMetrics
+    };
+}
+
+function computePersonalizedForecast(birthNakshatraNum, transitBakshatraIndex) {
+    const transitNakshatraNum = transitBakshatraIndex + 1;
+    const distance = ((transitNakshatraNum - birthNakshatraNum + 27) % 27) + 1;
+    const tarabalaCategory = (distance % 9) || 9;
+
+    const guidanceMap = {
+        1: "A day of high focus and foundational adjustments. Channel your energy intentionally into personal development.",
+        2: "Prosperous and favorable alignments dominate this date. Excellent window for initiating creative or material projects.",
+        3: "Minor logistical obstacles or delays may surface today. Double-check small structural parameters before completing goals.",
+        4: "Highly stable, comforting energy patterns. Ideal for routine work, grounding your home space, and steady execution.",
+        5: "Internal friction or minor communication loops require patience today. Step back and think clearly before responding.",
+        6: "Exceptional productivity and execution flow. Your innate skills align perfectly with clearing difficult objectives today.",
+        7: "Intense energy patterns tracking transitions. Keep your commitments lightweight and focus on tracking restoration metrics.",
+        8: "Harmonious interpersonal interactions dominate this frame. Collaboration, team communications, and agreements flow easily.",
+        9: "Peak relationship and social support patterns. Guidance from key mentors or close connections is highly accessible today."
+    };
+    return guidanceMap[tarabalaCategory] || "Steady alignments tracking across this transit block.";
+}
+
+function computePersonalizedAttention(birthRasiNum, transitMoonLong) {
+    const transitRasiNum = Math.floor(transitMoonLong / 30) + 1;
+    const rasiDistance = ((transitRasiNum - birthRasiNum + 12) % 12) + 1;
+
+    if (rasiDistance === 1) return "Focus intensely on physical vitality, self-presentation, and prioritizing personal energy boundaries today.";
+    if (rasiDistance === 4) return "Prioritize home environment stability, clear family check-ins, and deep psychological rejuvenation.";
+    if (rasiDistance === 7) return "Attention shifts directly toward partnerships, close interpersonal relations, and mutual agreements.";
+    if (rasiDistance === 8) return "Review hidden operational issues, auditing processes, research milestones, or legacy records.";
+    if (rasiDistance === 10) return "High professional visibility today. Direct focus toward launching strategic vocational milestones.";
+    if (rasiDistance === 12) return "High mental expenditures. Prioritize back-office cleaning, clearing digital storage spaces, and deep sleep cycles.";
+
+    return "Maintain your baseline routine tracking. Review open logistical files and handle standard milestones.";
+}
+
+function computeLifestyleGuidance(birthNakshatraNum, transitBakshatraIndex) {
+    const transitNakshatraNum = transitBakshatraIndex + 1;
+    const distance = ((transitNakshatraNum - birthNakshatraNum + 27) % 27) + 1;
+    const score = (distance % 9) || 9;
+
+    const isFavorable = [2, 4, 6, 8, 9].includes(score);
+
+    return {
+        luckyColor: isFavorable ? "Yellow / Cream" : "Charcoal / Silver",
+        luckyNumber: isFavorable ? String((score * 3) % 9 || 9) : String((score * 2) % 7 || 3),
+        goodTime: isFavorable ? "09:30 AM - 11:00 AM" : "02:15 PM - 03:45 PM",
+        badTime: isFavorable ? "04:30 PM - 05:45 PM" : "07:30 AM - 09:00 AM",
+        action: isFavorable 
+            ? "Great day to start new tasks, submit vital work, and hold key meetings." 
+            : "Focus on organizing existing paperwork, background testing, and administrative cleanup."
     };
 }
