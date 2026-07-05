@@ -3,6 +3,7 @@ import Swisseph from "https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src
 let swissPromise = null;
 const SECONDS_PER_HOUR = 3600000;
 
+// Internal instance placeholder to avoid re-declaration variable collisions
 let sweInstance = null;
 
 export const NAKSHATRAS = [
@@ -49,6 +50,7 @@ export function toUtcDateParts(year, month, day, hour, minute, timezone) {
 export async function getSwiss() {
     if (!swissPromise) {
         swissPromise = (async () => {
+            // Passing explicit configurations so WebAssembly files resolve over remote channels natively
             const instance = new Swisseph({
                 locateFile: (path) => {
                     if (path.endsWith('.wasm') || path.endsWith('.data')) {
@@ -73,12 +75,14 @@ export async function calculateSunMoonLongitudes(birthInput) {
     const utc = toUtcDateParts(parts.year, parts.month, parts.day, parts.hour, parts.minute, parts.timezone);
     const julianDay = swe.julday(utc.year, utc.month, utc.day, utc.hour);
 
+    // 1. Run raw ephemeris data calculations
     const siderealSun = swe.calc_ut(julianDay, swe.SE_SUN, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     const siderealMoon = swe.calc_ut(julianDay, swe.SE_MOON, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     const tropicalSun = swe.calc_ut(julianDay, swe.SE_SUN, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED);
     const tropicalMoon = swe.calc_ut(julianDay, swe.SE_MOON, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED);
     const ayanamsa = swe.get_ayanamsa_ut(julianDay);
 
+    // 2. Map strictly ordered clean sequential variables
     const sunSiderealLong = normalizeDegrees(siderealSun[0]);
     const moonSiderealLong = normalizeDegrees(siderealMoon[0]);
     const elongation = normalizeDegrees(moonSiderealLong - sunSiderealLong);
