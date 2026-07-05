@@ -1,5 +1,5 @@
-import { getBirthData } from "./birth_engine.js?v=13";
-import { generateDailyForecast } from "./daily_forecast_engine.js?v=13";
+import { getBirthData } from "./birth_engine.js?v=14";
+import { generateDailyForecast } from "./daily_forecast_engine.js?v=14";
 
 let currentBirthProfile = null;
 
@@ -23,7 +23,6 @@ async function loadStoredProfileAndRender() {
         const profile = JSON.parse(storedData);
         currentBirthProfile = profile;
 
-        // Defensive verification checkpoint to prevent corrupt local data blocks
         if (!profile.nakshatra || (!profile.hour && profile.birthHour === undefined)) {
             localStorage.removeItem("permanentBirthProfile");
             return;
@@ -70,29 +69,15 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
 }
 
 async function handleSubmit() {
-    const dob = document.getElementById("dob").value;
-    const tob = document.getElementById("tob").value;
-    const ampm = document.getElementById("ampm").value;
+    const dobValue = document.getElementById("dob").value; // Returns YYYY-MM-DD
+    const tobValue = document.getElementById("tob").value; // Returns HH:MM (24h format)
 
     try {
-        if (!dob.includes("-") || dob.trim().length !== 10) {
-            throw new Error("Date must be in DD-MM-YYYY format.");
-        }
-        if (!tob.includes(":") || tob.trim().length !== 5) {
-            throw new Error("Time must be in HH:MM format.");
-        }
+        if (!dobValue) throw new Error("Please select your Date of Birth.");
+        if (!tobValue) throw new Error("Please select your Time of Birth.");
 
-        const [day, month, year] = dob.split("-").map(Number);
-        const parts = tob.split(":");
-        let hour = Number(parts[0]);
-        let minute = Number(parts[1]);
-
-        if (isNaN(hour) || isNaN(minute) || hour > 12 || hour < 1 || minute > 59) {
-            throw new Error("Invalid time values. Use 01:00 to 12:59.");
-        }
-        
-        if (ampm === "PM" && hour < 12) hour += 12;
-        if (ampm === "AM" && hour === 12) hour = 0;
+        const [year, month, day] = dobValue.split("-").map(Number);
+        const [hour, minute] = tobValue.split(":").map(Number);
 
         const inputPayload = {
             year, month, day, hour, minute,
@@ -123,17 +108,11 @@ async function handleConfirm() {
     if (!currentBirthProfile) return;
 
     try {
-        const dob = document.getElementById("dob").value;
-        const tob = document.getElementById("tob").value;
-        const ampm = document.getElementById("ampm").value;
+        const dobValue = document.getElementById("dob").value;
+        const tobValue = document.getElementById("tob").value;
 
-        const [day, month, year] = dob.split("-").map(Number);
-        const parts = tob.split(":");
-        let hour = Number(parts[0]);
-        let minute = Number(parts[1]);
-        
-        if (ampm === "PM" && hour < 12) hour += 12;
-        if (ampm === "AM" && hour === 12) hour = 0;
+        const [year, month, day] = dobValue.split("-").map(Number);
+        const [hour, minute] = tobValue.split(":").map(Number);
 
         const profileSavePackage = {
             ...currentBirthProfile,
@@ -165,63 +144,6 @@ function handleReset() {
     window.location.reload();
 }
 
-// 1. Mobile-Resilient Date Mask (Handles input selection and deletions smoothly)
-function configureDateMask(element) {
-    if (!element) return;
-    element.setAttribute("placeholder", "DD-MM-YYYY");
-    
-    element.addEventListener("input", (e) => {
-        // Capture input value and strip non-digits
-        let cursorPosition = e.target.selectionStart;
-        let originalLength = e.target.value.length;
-        let digits = e.target.value.replace(/\D/g, "");
-        
-        let formatted = "";
-        if (digits.length > 0) {
-            formatted += digits.slice(0, 2);
-        }
-        if (digits.length > 2) {
-            formatted += "-" + digits.slice(2, 4);
-        }
-        if (digits.length > 4) {
-            formatted += "-" + digits.slice(4, 8);
-        }
-        
-        e.target.value = formatted;
-        
-        // Adjust cursor positioning for mobile input rendering
-        let newLength = formatted.length;
-        cursorPosition = cursorPosition + (newLength - originalLength);
-        e.target.setSelectionRange(cursorPosition, cursorPosition);
-    });
-}
-
-// 2. Mobile-Resilient Time Mask
-function configureTimeMask(element) {
-    if (!element) return;
-    element.setAttribute("placeholder", "HH:MM");
-    
-    element.addEventListener("input", (e) => {
-        let cursorPosition = e.target.selectionStart;
-        let originalLength = e.target.value.length;
-        let digits = e.target.value.replace(/\D/g, "");
-        
-        let formatted = "";
-        if (digits.length > 0) {
-            formatted += digits.slice(0, 2);
-        }
-        if (digits.length > 2) {
-            formatted += ":" + digits.slice(2, 4);
-        }
-        
-        e.target.value = formatted;
-        
-        let newLength = formatted.length;
-        cursorPosition = cursorPosition + (newLength - originalLength);
-        e.target.setSelectionRange(cursorPosition, cursorPosition);
-    });
-}
-
 document.addEventListener("DOMContentLoaded", () => {
     loadStoredProfileAndRender();
 
@@ -229,9 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("confirmBtn")?.addEventListener("click", handleConfirm);
     document.getElementById("rejectBtn")?.addEventListener("click", handleReject);
     document.getElementById("resetBtn")?.addEventListener("click", handleReset);
-    
-    configureDateMask(document.getElementById("dob"));
-    configureTimeMask(document.getElementById("tob"));
     
     const datePicker = document.getElementById("forecast-date-input");
     if (datePicker) {
