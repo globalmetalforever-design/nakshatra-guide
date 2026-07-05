@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nakshatra Guide Dashboard</title>
-    //<script src="https://cdn.jsdelivr.net/npm/swisseph@2.10.3/dist/swisseph.api.js"></script>
     <style>
         body {
             background-color: #0a1128;
@@ -33,7 +32,6 @@
             border-radius: 4px;
             font-size: 1rem;
         }
-        /* Style adjustments for HTML5 calendar/time input icons */
         input[type="date"]::-webkit-calendar-picker-indicator,
         input[type="time"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
@@ -54,10 +52,9 @@
             opacity: 0.9;
         }
 
-        /* --- DEVICE ADAPTIVE RESPONSIVE GRID CSS --- */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 Columns for Desktop */
+            grid-template-columns: repeat(3, 1fr); 
             gap: 20px;
             align-items: stretch;
             margin-bottom: 20px;
@@ -69,13 +66,12 @@
             gap: 20px;
         }
 
-        /* Responsive Mobile Layout Override seen in WhatsApp Image 2026-07-05 at 1.15.35 PM.jpeg */
         @media (max-width: 850px) {
             .dashboard-grid {
-                grid-template-columns: 1fr; /* Stack vertically into full width blocks on mobile */
+                grid-template-columns: 1fr; 
             }
             .forecast-split {
-                grid-template-columns: 1fr; /* Stack forecast/attention blocks vertically */
+                grid-template-columns: 1fr; 
             }
             body {
                 margin: 10px;
@@ -87,21 +83,16 @@
 
     <h1 style="text-align: center; color: #ffcc00; margin-bottom: 30px; letter-spacing: 1px; font-size: 2rem;">NAKSHATRA GUIDE</h1>
 
-    <!-- THE ADAPTIVE HEADER GRID -->
     <div class="dashboard-grid">
-        
-        <!-- CARD 1: DOB / ASTROLOGICAL PROFILE -->
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 15px;">
             <div>
                 <h3 style="margin-top: 0; color: #ffcc00;">Astrological Profile</h3>
                 <div style="margin-bottom: 12px;">
                     <label for="dob">Date of Birth</label>
-                    <!-- Native HTML5 Date Picker handles punctuation on mobile inherently -->
                     <input type="date" id="dob" style="width: 100%; box-sizing: border-box;">
                 </div>
                 <div style="margin-bottom: 12px;">
                     <label for="tob">Time of Birth</label>
-                    <!-- Native HTML5 Time Picker provides seamless clock inputs -->
                     <input type="time" id="tob" style="width: 100%; box-sizing: border-box;">
                 </div>
                 <div style="margin-bottom: 15px;">
@@ -117,7 +108,6 @@
             </div>
         </div>
 
-        <!-- CARD 2: DETECTED PROFILE CONFIGURATION -->
         <div class="card" style="display: flex; flex-direction: column; min-height: 250px;">
             <h3 style="margin-top: 0; color: #ffcc00;">Detected Nakshatra</h3>
             <h2 id="detectedNakshatra" style="color: #ffffff; margin: 15px 0 5px 0; font-size: 1.8rem;">Waiting for Birth Details</h2>
@@ -131,7 +121,6 @@
             </div>
         </div>
 
-        <!-- CARD 3: TODAY'S GUIDANCE TIMELINES -->
         <div class="card" id="guidanceCard" style="display: flex; flex-direction: column; border: 2px solid #ffcc00; box-sizing: border-box; background: rgba(255, 204, 0, 0.02);">
             <h3 style="margin-top: 0; color: #ffcc00;">Today's Guidance</h3>
             <div style="margin-bottom: 12px;">
@@ -150,9 +139,7 @@
         </div>
     </div>
 
-    <!-- BOTTOM DATA PIPELINE AREA -->
     <div id="dynamicBottomArea" style="margin-top: 20px;">
-        <!-- NOTE PANEL -->
         <div id="notePanel" class="card" style="background: rgba(255,255,255,0.01); border-left: 4px solid #ffcc00; padding: 15px;">
             <h4 style="margin-top: 0; color: #ffcc00;">Note</h4>
             <p style="margin: 0; line-height: 1.5; color: #cccccc; font-size: 0.95rem;">
@@ -160,7 +147,6 @@
             </p>
         </div>
 
-        <!-- TWO SEPARATE POST-CONFIRMATION FORECAST CARDS -->
         <div id="forecastAndAttentionPanels" class="forecast-split" style="display: none;">
             <div class="card" style="border-top: 3px solid #28a745;">
                 <h4 style="color: #ffcc00; margin-top: 0; font-size: 1.1rem; margin-bottom: 10px;">Daily Forecast</h4>
@@ -173,8 +159,7 @@
         </div>
     </div>
 
-    <!-- Whitelisted jsDelivr Swiss Ephemeris CDN Integration -->
-    <script src="https://cdn.jsdelivr.net/npm/swisseph@2.10.3/dist/swisseph.api.js"></script>
-    <script type="module" src="js/index_app.js?v=14"></script>
+    <!-- Force a comprehensive browser module compilation update across all mobile and desktop windows -->
+    <script type="module" src="js/index_app.js?v=100"></script>
 </body>
 </html>
