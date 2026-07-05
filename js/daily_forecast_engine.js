@@ -1,4 +1,4 @@
-import { getTodayPanchang } from "./panchang_engine.js";
+//import { getTodayPanchang } from "./panchang_engine.js";
 
 const SCORE_CATEGORIES = ["finance", "initiative", "relationships", "learning", "health"];
 
