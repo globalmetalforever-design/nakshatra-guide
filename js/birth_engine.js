@@ -3,7 +3,6 @@ import Swisseph from "https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src
 let swissPromise = null;
 const SECONDS_PER_HOUR = 3600000;
 
-// FIXED: Defined a distinct internal variable placeholder to avoid re-declaration collisions
 let sweInstance = null;
 
 export const NAKSHATRAS = [
@@ -50,7 +49,6 @@ export function toUtcDateParts(year, month, day, hour, minute, timezone) {
 export async function getSwiss() {
     if (!swissPromise) {
         swissPromise = (async () => {
-            // FIXED: Passing locateFile modifier explicitly so WebAssembly compiles from the CDN path
             const instance = new Swisseph({
                 locateFile: (path) => {
                     if (path.endsWith('.wasm') || path.endsWith('.data')) {
@@ -61,7 +59,7 @@ export async function getSwiss() {
             });
             await instance.initSwissEph();
             instance.set_sid_mode(instance.SE_SIDM_LAHIRI, 0, 0);
-            sweInstance = instance; // Bind instance reference globally
+            sweInstance = instance;
             return instance;
         })();
     }
@@ -75,14 +73,12 @@ export async function calculateSunMoonLongitudes(birthInput) {
     const utc = toUtcDateParts(parts.year, parts.month, parts.day, parts.hour, parts.minute, parts.timezone);
     const julianDay = swe.julday(utc.year, utc.month, utc.day, utc.hour);
 
-    // 1. Run raw ephemeris data calculations
     const siderealSun = swe.calc_ut(julianDay, swe.SE_SUN, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     const siderealMoon = swe.calc_ut(julianDay, swe.SE_MOON, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     const tropicalSun = swe.calc_ut(julianDay, swe.SE_SUN, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED);
     const tropicalMoon = swe.calc_ut(julianDay, swe.SE_MOON, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED);
     const ayanamsa = swe.get_ayanamsa_ut(julianDay);
 
-    // 2. Map strictly ordered clean sequential variables
     const sunSiderealLong = normalizeDegrees(siderealSun[0]);
     const moonSiderealLong = normalizeDegrees(siderealMoon[0]);
     const elongation = normalizeDegrees(moonSiderealLong - sunSiderealLong);

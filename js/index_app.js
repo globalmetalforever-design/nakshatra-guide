@@ -1,5 +1,5 @@
-import { getBirthData } from "./birth_engine.js?v=14";
-import { generateDailyForecast } from "./daily_forecast_engine.js?v=14";
+import { getBirthData } from "./birth_engine.js?v=100";
+import { generateDailyForecast } from "./daily_forecast_engine.js?v=100";
 
 let currentBirthProfile = null;
 
@@ -69,8 +69,8 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
 }
 
 async function handleSubmit() {
-    const dobValue = document.getElementById("dob").value; // Returns YYYY-MM-DD
-    const tobValue = document.getElementById("tob").value; // Returns HH:MM (24h format)
+    const dobValue = document.getElementById("dob").value; 
+    const tobValue = document.getElementById("tob").value; 
 
     try {
         if (!dobValue) throw new Error("Please select your Date of Birth.");
