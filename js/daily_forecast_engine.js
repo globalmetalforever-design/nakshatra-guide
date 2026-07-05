@@ -1,5 +1,3 @@
-//import { getTodayPanchang } from "./panchang_engine.js?v=13";
-
 /**
  * Generates personalized daily forecasts, attention metrics, and lifestyle guidance
  * by comparing birth chart positions against dynamic daily transit data.
