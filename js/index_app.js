@@ -1,5 +1,6 @@
 import { getBirthData } from "./birth_engine.js?v=100";
-import { generateDailyForecast } from "./daily_forecast_engine.js?v=100";
+import { generateDailyForecast as generateDailyForecast } from "./daily_forecast_engine.js?v=100";
+
 
 let currentBirthProfile = null;
 

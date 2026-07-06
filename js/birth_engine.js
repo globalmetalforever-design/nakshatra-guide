@@ -1,5 +1,4 @@
 import Swisseph from "https://cdn.jsdelivr.net/gh/prolaxu/swisseph-wasm@main/src/swisseph.js";
-
 let swissPromise = null;
 const SECONDS_PER_HOUR = 3600000;
 
