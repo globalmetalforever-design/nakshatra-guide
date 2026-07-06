@@ -155,8 +155,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const datePicker = document.getElementById("forecast-date-input");
     if (datePicker) {
         datePicker.addEventListener("change", async (event) => {
-            if (currentBirthProfile) {
-                await renderUserDashboard(currentBirthProfile, new Date(event.target.value));
+            if (currentBirthProfile && event.target.value) {
+                // Break string down manually into [YYYY, MM, DD] to bypass raw string constructor caching bugs
+                const [y, m, d] = event.target.value.split("-").map(Number);
+                const targetedLocalDate = new Date(y, m - 1, d, 12, 0, 0);
+                
+                await renderUserDashboard(currentBirthProfile, targetedLocalDate);
             }
         });
     }
