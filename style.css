@@ -35,7 +35,14 @@ h1{
     grid-template-columns:70% 28%;
     gap:20px;
 }
-
+.profile-verify-text {
+    font-size: 0.8rem;
+    font-style: italic;
+    opacity: 0.75;
+    margin-top: 4px;
+    line-height: 1.2;
+    display: block;
+}
 .birth-panel{
     display:flex;
 flex-direction:column;
