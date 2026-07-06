@@ -1,9 +1,13 @@
-// Navigating up out of the Addons folder to tap your frozen core engine
 import { getSwiss, normalizeDegrees, toUtcDateParts } from "../../js/birth_engine.js?v=100";
+import { calculateVaraAndYoga } from "./panchanga_limbs/vara_yoga_addon.js";
+import { calculateKarana } from "./panchanga_limbs/karana_addon.js";
+import { calculateNodesTransit } from "./panchanga_limbs/nodes_engine.js";
+import { calculateMajorPlanetsTransit } from "./panchanga_limbs/planets_engine.js";
 
 /**
  * Addon Module: Generates a highly accurate transit forecast fixed precisely 
- * to 7:00 AM Indian Standard Time (IST) for any selected target calendar date.
+ * to 7:00 AM Indian Standard Time (IST) for any selected target calendar date,
+ * incorporating dynamic Tithi, Vara, Yoga, Karana, and Rahu/Ketu configurations.
  */
 export async function generateTimeLockedForecast(birthProfile, targetDate = new Date()) {
     if (!birthProfile || !birthProfile.nakshatra) {
@@ -14,28 +18,33 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
         };
     }
 
-    // 1. Fetch the frozen core Swiss Ephemeris promise wrapper
     const swe = await getSwiss();
 
-    // 2. Lock target calendar date to exactly 7:00 AM IST
+    // Calculate dynamic node positions
+    const nodes = await calculateNodesTransit(targetDate);
+
+    // Calculate house positions relative to the user's birth Rasi
+    const rahuHouse = ((nodes.rahu.rasiIndex - birthProfile.rasi.number + 12) % 12) + 1;
+    const ketuHouse = ((nodes.ketu.rasiIndex - birthProfile.rasi.number + 12) % 12) + 1;
+    // Calculate dynamic node positions
+    const nodes = await calculateNodesTransit(targetDate);
+
+    // NEW: Calculate all major planetary positions simultaneously
+    const planets = await calculateMajorPlanetsTransit(targetDate);
     const targetYear = targetDate.getFullYear();
     const targetMonth = targetDate.getMonth() + 1;
     const targetDay = targetDate.getDate();
-    
-    // TIME LOCK ALIGNMENT: 7:00 AM IST translates directly to 1:30 AM UTC (7 - 5.5 hours offset)
     const targetHourUTC = 1.5; 
 
-    // Convert fixed parameters directly to the corresponding Julian Day
     const julianDay = swe.julday(targetYear, targetMonth, targetDay, targetHourUTC);
 
-    // 3. Compute planetary transits for the absolute 7:00 AM IST window
     const siderealSun = swe.calc_ut(julianDay, swe.SE_SUN, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     const siderealMoon = swe.calc_ut(julianDay, swe.SE_MOON, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED | swe.SEFLG_SIDEREAL);
     
     const transitSunLong = normalizeDegrees(siderealSun[0]);
     const transitMoonLong = normalizeDegrees(siderealMoon[0]);
 
-    // 4. Dynamic Tithi Engine (No Paksha strings)
+    // 1. Dynamic Tithi Engine
     const elongation = normalizeDegrees(transitMoonLong - transitSunLong);
     const tithiIndex = Math.floor(elongation / 12); 
     const tithiNumber = (tithiIndex % 15) + 1;      
@@ -51,10 +60,26 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
         tithiName = tithiIndex === 14 ? "Purnima" : "Amavasya";
     }
 
+    // 2. Dynamic Auxiliary Limb Engine Executions
+    const varaYogaLimbs = await calculateVaraAndYoga(targetDate);
+    const karanaLimb = await calculateKarana(targetDate);
+
     const transitNakshatraIndex = Math.floor(transitMoonLong / (360 / 27));
 
-    // 5. Compute text assets via the standalone addon mapping engines
-    const forecastText = addonComputeForecast(birthProfile.nakshatra.number, transitNakshatraIndex, tithiName);
+    // Calculate node text traits to append inside the forecast assembler
+    const nodeInfluences = computeNodeTraits(rahuHouse, ketuHouse);
+
+    // 3. Compute text assets via the expanded mapping engines
+    const forecastText = addonComputeForecast(
+        birthProfile.nakshatra.number, 
+        transitNakshatraIndex, 
+        tithiName, 
+        varaYogaLimbs.vara, 
+        varaYogaLimbs.yoga,
+        karanaLimb.karana,
+        nodeInfluences
+    );
+
     const attentionText = addonComputeAttention(birthProfile.rasi.number, transitMoonLong);
     const guidanceMetrics = addonComputeGuidance(birthProfile.nakshatra.number, transitNakshatraIndex);
 
@@ -65,7 +90,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     };
 }
 
-function addonComputeForecast(birthNakshatraNum, transitBakshatraIndex, tithiString) {
+function addonComputeForecast(birthNakshatraNum, transitBakshatraIndex, tithiString, varaString, yogaString, karanaString, nodeInfluences) {
     const transitNakshatraNum = transitBakshatraIndex + 1;
     const distance = ((transitNakshatraNum - birthNakshatraNum + 27) % 27) + 1;
     const tarabalaCategory = (distance % 9) || 9;
@@ -82,8 +107,66 @@ function addonComputeForecast(birthNakshatraNum, transitBakshatraIndex, tithiStr
         9: "Peak relationship and social support patterns. Guidance from key mentors or close connections is highly accessible today."
     };
     
+    const varaTraitMap = {
+        "Ravivara (Sunday)": "Solar vitality encourages high structural authority and planning macro strategies.",
+        "Somavara (Monday)": "Lunar rhythms optimize emotional intelligence, public outreach, and creative conception.",
+        "Mangalavara (Tuesday)": "Martial focus provides intense energy for clearing heavy backlogs and operational debugging.",
+        "Budhavara (Wednesday)": "Mercurial currents highly optimize mathematical transactions, contracts, and technical study.",
+        "Guruvara (Thursday)": "Jupiterian expansion favors financial audits, wisdom cultivation, and consultations.",
+        "Sukravara (Friday)": "Venusian properties enhance strategic aesthetics, alliance forging, and design processes.",
+        "Sanivara (Saturday)": "Saturnian discipline demands rigorous verification, systemic sorting, and patient execution."
+    };
+
+    const yogaTraitMap = {
+        "Vishkumbha": "Maintain boundaries against minor transactional frictions.",
+        "Priti": "Harmonious connection vectors facilitate communication channels.",
+        "Ayushman": "Vitality structures support steady, health-focused execution.",
+        "Saubhagya": "Supportive ambient elements elevate productivity metrics.",
+        "Shobhana": "Aesthetic refinement and intellectual clarity remain high.",
+        "Atiganda": "Navigate strategic bottlenecks with calculated deliberation.",
+        "Sukarma": "Constructive work parameters flow cleanly to final targets.",
+        "Dhriti": "High patient endurance assists in auditing complex files.",
+        "Shula": "Resolve internal project operational challenges directly.",
+        "Ganda": "Review core infrastructure assets for minor technical bugs.",
+        "Vridhi": "Compounding progression optimizes creative expansion.",
+        "Dhruva": "Stable foundational states support locked-in milestones.",
+        "Vyaghata": "Safeguard assets against temporary workflow disruptions.",
+        "Harshana": "Dynamic execution velocity accelerates task completions.",
+        "Vajra": "Unwavering determination cuts cleanly through backlogs.",
+        "Siddhi": "Functional expertise yields measurable execution gains.",
+        "Vyatipata": "Decline heavy forward commitments; execute cleanup maps.",
+        "Variyan": "Operational resources organize fluidly behind milestones.",
+        "Parigha": "Consolidate structural positions against external inputs.",
+        "Shiva": "Pure meditative focus assists in master-planning tasks.",
+        "Siddha": "Pre-calibrated operational templates lock into place easily.",
+        "Sadhya": "Methodical research pipelines secure measurable breakthroughs.",
+        "Shubha": "Auspicious execution fields protect long-range goals.",
+        "Shukla": "High visual clarity supports clean presentation reviews.",
+        "Brahma": "Creative architectural structuring matches creative ideals.",
+        "Indra": "Administrative oversight and managerial tasks excel.",
+        "Vaidhriti": "Internalize focus; clean up underlying ledger databases."
+    };
+
+    const karanaTraitMap = {
+        "Bava": "Productive, action-oriented energy favors professional execution vectors.",
+        "Balava": "Nurturing and developmental tasks find smooth progress fields.",
+        "Kaulava": "Social alliances, networking connections, and partnership dynamics excel.",
+        "Taitila": "Strategic flexibility helps you adapt to unexpected administrative shifts.",
+        "Gara": "Meticulous structural formatting and manual data tuning yield solid results.",
+        "Vanija": "Commercial negotiations, inventory updates, and trading agreements are favored.",
+        "Vishti": "A heavy energy frame. Delay crucial launches; focus on debugging and defensive cleanup tasks.",
+        "Shakuni": "Analytical review, diagnostic tests, and legal documentation are optimized.",
+        "Chatushpada": "Grounding tasks, asset preservation strategies, and physical audits flow cleanly.",
+        "Naga": "Deep research parameters, auditing hidden logs, and structural work excel.",
+        "Kintughna": "Favorable framework for launching educational milestones or initial conceptual plans."
+    };
+
     const coreForecast = guidanceMap[tarabalaCategory] || "Steady alignments tracking across this transit block.";
-    return `${tithiString}\n\n${coreForecast}`;
+    const varaTrait = varaTraitMap[varaString] || "Baseline solar tracking rules apply.";
+    const yogaTrait = yogaTraitMap[yogaString] || "Baseline energetic alignments apply.";
+    const karanaTrait = karanaTraitMap[karanaString] || "Baseline operational parameters apply.";
+
+    return `${tithiString} • ${varaString} • ${yogaString} Yoga • ${karanaString} Karana\n\n${coreForecast}\n\n${varaTrait} ${yogaTrait} ${karanaTrait}\n\n${nodeInfluences}`;
 }
 
 function addonComputeAttention(birthRasiNum, transitMoonLong) {
@@ -116,4 +199,20 @@ function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex) {
             ? "Great day to start new tasks, submit vital work, and hold key meetings." 
             : "Focus on organizing existing paperwork, background testing, and administrative cleanup."
     };
+}
+
+function computeNodeTraits(rahuHouse, ketuHouse) {
+    let traits = "";
+    if (rahuHouse === 3 || rahuHouse === 6 || rahuHouse === 11) {
+        traits += "Rahu is in a favorable transit house, generating competitive breakthroughs and sudden gains. ";
+    } else {
+        traits += "Rahu's transit counsels guarding against over-ambition or illusionary commitments in focal sectors. ";
+    }
+
+    if (ketuHouse === 12 || ketuHouse === 8) {
+        traits += "Ketu's current transit alignment supports deep intuitive insights and spiritual auditing tasks.";
+    } else {
+        traits += "Ketu's alignment suggests maintaining complete transparency in communication streams.";
+    }
+    return traits;
 }
