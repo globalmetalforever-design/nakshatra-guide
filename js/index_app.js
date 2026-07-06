@@ -4,6 +4,49 @@ import { generateDailyForecast as generateDailyForecast } from "./daily_forecast
 
 let currentBirthProfile = null;
 
+/**
+ * Inline structural layout injector to safely display verified parameters
+ * inside the native card element without expanding bounding layouts.
+ */
+function appendVerificationSubtitles(profile) {
+    const detectedPada = document.getElementById("detectedPada");
+    if (!detectedPada) return;
+
+    // Check if verification metadata elements already exist to avoid layout duplicating cascades
+    if (document.getElementById("verify-metadata-block")) {
+        document.getElementById("verify-metadata-block").remove();
+    }
+
+    // Capture explicit inputs from form profiles safely
+    const birthY = profile.year || (profile.inputs?.year) || "-";
+    const birthM = profile.month || (profile.inputs?.month) || "-";
+    const birthD = profile.day || (profile.inputs?.day) || "-";
+    const birthH = String(profile.hour !== undefined ? profile.hour : (profile.inputs?.hour || 0)).padStart(2, '0');
+    const birthMin = String(profile.minute !== undefined ? profile.minute : (profile.inputs?.minute || 0)).padStart(2, '0');
+    
+    // Fallback lookup strings for locations
+    const birthPlace = profile.inputs?.place || "Recorded Location";
+
+    const verifyDiv = document.createElement("div");
+    verifyDiv.id = "verify-metadata-block";
+    verifyDiv.style.marginTop = "6px";
+    verifyDiv.style.paddingTop = "4px";
+    verifyDiv.style.borderTop = "1px solid rgba(255, 255, 255, 0.08)";
+    verifyDiv.style.fontSize = "0.78rem";
+    verifyDiv.style.fontStyle = "italic";
+    verifyDiv.style.opacity = "0.7";
+    verifyDiv.style.lineHeight = "1.3";
+
+    verifyDiv.innerHTML = `
+        <div>Date: ${birthY}-${String(birthM).padStart(2, '0')}-${String(birthD).padStart(2, '0')}</div>
+        <div>Time: ${birthH}:${birthMin}</div>
+        <div>Place: ${birthPlace}</div>
+    `;
+    
+    // Appends cleanly inside the box container directly below the Pada line item
+    detectedPada.appendChild(verifyDiv);
+}
+
 function initializeDatePicker() {
     const datePicker = document.getElementById("forecast-date-input");
     if (datePicker && !datePicker.value) {
@@ -33,6 +76,9 @@ async function loadStoredProfileAndRender() {
         document.getElementById("detectedPada").innerText = `Pada ${profile.pada?.number || ""}`;
         if (document.getElementById("vedicRasi")) document.getElementById("vedicRasi").innerText = profile.rasi?.name || "-";
         if (document.getElementById("westernZodiac")) document.getElementById("westernZodiac").innerText = profile.zodiac?.name || "-";
+
+        // Inject verified birth parameters inside the card box elements
+        appendVerificationSubtitles(profile);
 
         if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "none";
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
@@ -87,11 +133,17 @@ async function handleSubmit() {
 
         currentBirthProfile = await getBirthData(inputPayload);
 
+        // Map inputs directly onto profile references for seamless text binding
+        currentBirthProfile.inputs = { date: dobValue, time: tobValue, place: document.getElementById("birth-place-input")?.value || "India" };
+
         document.getElementById("detectedNakshatra").innerText = `${currentBirthProfile.nakshatra.name}`;
         document.getElementById("detectedPada").innerText = `Pada ${currentBirthProfile.pada.number}`;
         if (document.getElementById("vedicRasi")) document.getElementById("vedicRasi").innerText = currentBirthProfile.rasi.name;
         if (document.getElementById("westernZodiac")) document.getElementById("westernZodiac").innerText = currentBirthProfile.zodiac.name;
         
+        // Render verification texts safely into the active Nakshatra block container view
+        appendVerificationSubtitles(currentBirthProfile);
+
         document.getElementById("submitBtn").style.display = "none";
         document.getElementById("confirmBtn").style.display = "inline-block";
         document.getElementById("rejectBtn").style.display = "inline-block";
@@ -111,6 +163,7 @@ async function handleConfirm() {
     try {
         const dobValue = document.getElementById("dob").value;
         const tobValue = document.getElementById("tob").value;
+        const locationValue = document.getElementById("birth-place-input")?.value || "India";
 
         const [year, month, day] = dobValue.split("-").map(Number);
         const [hour, minute] = tobValue.split(":").map(Number);
@@ -118,7 +171,8 @@ async function handleConfirm() {
         const profileSavePackage = {
             ...currentBirthProfile,
             year, month, day, hour, minute,
-            timezone: -(new Date().getTimezoneOffset() / 60)
+            timezone: -(new Date().getTimezoneOffset() / 60),
+            inputs: { date: dobValue, time: tobValue, place: locationValue }
         };
 
         localStorage.setItem("permanentBirthProfile", JSON.stringify(profileSavePackage));
@@ -137,6 +191,10 @@ function handleReject() {
     document.getElementById("detectedPada").innerText = "";
     if (document.getElementById("vedicRasi")) document.getElementById("vedicRasi").innerText = "-";
     if (document.getElementById("westernZodiac")) document.getElementById("westernZodiac").innerText = "-";
+    
+    if (document.getElementById("verify-metadata-block")) {
+        document.getElementById("verify-metadata-block").remove();
+    }
 }
 
 function handleReset() {
@@ -157,7 +215,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (datePicker) {
         datePicker.addEventListener("change", async (event) => {
             if (currentBirthProfile && event.target.value) {
-                // Break string down manually into [YYYY, MM, DD] to bypass raw string constructor caching bugs
                 const [y, m, d] = event.target.value.split("-").map(Number);
                 const targetedLocalDate = new Date(y, m - 1, d, 12, 0, 0);
                 
