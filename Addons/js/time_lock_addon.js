@@ -37,15 +37,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     const transitSunLong = normalizeDegrees(siderealSun[0]);
     const transitMoonLong = normalizeDegrees(siderealMoon[0]);
 
-    // 2. Parse User Birth Profile Inputs for Front-end Verification Display
-    const rawDate = birthProfile.inputs?.date || "Not Provided";
-    const rawTime = birthProfile.inputs?.time || "Not Provided";
-    const rawPlace = birthProfile.inputs?.place || "Not Provided";
-    
-    // Create an elegant validation block to print out at the top of the attention field
-    const dobVerificationBlock = `[ Profile Verified: ${rawDate} | ${rawTime} | ${rawPlace} ]\n\n`;
-
-    // 3. Compute House Positions relative to User's Birth Moon Sign (Rasi)
+    // 2. Compute House Positions relative to User's Birth Moon Sign (Rasi)
     const birthRasi = birthProfile.rasi.number;
     const houseMap = {
         sun: ((planets.sun.rasiIndex - birthRasi + 12) % 12) + 1,
@@ -59,7 +51,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
         ketu: ((nodes.ketu.rasiIndex - birthRasi + 12) % 12) + 1
     };
 
-    // 4. Execute Panchanga Limb Calculations
+    // 3. Execute Panchanga Limb Calculations
     const elongation = normalizeDegrees(transitMoonLong - transitSunLong);
     const tithiIndex = Math.floor(elongation / 12); 
     const tithiNumber = (tithiIndex % 15) + 1;      
@@ -71,50 +63,48 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     const karanaLimb = await calculateKarana(targetDate);
     const transitNakshatraIndex = Math.floor(transitMoonLong / (360 / 27));
 
-    // 5. SYNTHESIS ENGINE ALGORITHMIC RULES
-    // Select index dynamically from your arrays using mathematical moduli to keep outputs unique per date
+    // 4. SYNTHESIS ENGINE ALGORITHMIC RULES
     const daySeed = targetDay % 5;
 
     // Career Tier Evaluation
     let careerText = PHRASE_BANK.career.medium[daySeed % PHRASE_BANK.career.medium.length];
     if ([3, 6, 10, 11].includes(houseMap.sun) || [3, 6, 11].includes(houseMap.mars)) {
-        careerText = PHRASE_BANK.career.high[targetDay % PHRASE_BANK.career.high.length]; // Favorable transit houses[cite: 5]
+        careerText = PHRASE_BANK.career.high[targetDay % PHRASE_BANK.career.high.length]; 
     } else if ([4, 8, 12].includes(houseMap.saturn)) {
-        careerText = PHRASE_BANK.career.low[daySeed % PHRASE_BANK.career.low.length]; // Heavy/restrictive transit houses[cite: 5]
+        careerText = PHRASE_BANK.career.low[daySeed % PHRASE_BANK.career.low.length]; 
     }
 
-    // Finance Tier Evaluation[cite: 4, 13]
+    // Finance Tier Evaluation
     let financeText = PHRASE_BANK.finance.medium[daySeed % PHRASE_BANK.finance.medium.length];
     if ([2, 5, 7, 9, 11].includes(houseMap.jupiter)) {
-        financeText = PHRASE_BANK.finance.high[targetDay % PHRASE_BANK.finance.high.length]; // Auspicious house transit[cite: 4]
+        financeText = PHRASE_BANK.finance.high[targetDay % PHRASE_BANK.finance.high.length]; 
     } else if ([6, 8, 12].includes(houseMap.rahu)) {
-        financeText = PHRASE_BANK.finance.low[daySeed % PHRASE_BANK.finance.low.length]; // Volatile house transit[cite: 4]
+        financeText = PHRASE_BANK.finance.low[daySeed % PHRASE_BANK.finance.low.length]; 
     }
 
-    // Health, Remedies & Focus Assets Extraction[cite: 6, 7, 10, 12]
-    const healthText = PHRASE_BANK.health[targetDay % PHRASE_BANK.health.length];[cite: 12]
-    const strengthText = PHRASE_BANK.strengths[targetDay % PHRASE_BANK.strengths.length];[cite: 7]
-    const remedyText = PHRASE_BANK.spirituality[targetDay % PHRASE_BANK.spirituality.length];[cite: 6, 10]
-    const cautionText = PHRASE_BANK.caution[targetDay % PHRASE_BANK.caution.length];[cite: 9]
+    // Health, Remedies & Focus Assets Extraction
+    const healthText = PHRASE_BANK.health[targetDay % PHRASE_BANK.health.length];
+    const strengthText = PHRASE_BANK.strengths[targetDay % PHRASE_BANK.strengths.length];
+    const remedyText = PHRASE_BANK.spirituality[targetDay % PHRASE_BANK.spirituality.length];
+    const cautionText = PHRASE_BANK.caution[targetDay % PHRASE_BANK.caution.length];
 
-    // 6. Compile Final Texts
+    // 5. Compile Final Texts
     const headerPanchanga = `${tithiName} • ${varaYogaLimbs.vara} • ${varaYogaLimbs.yoga} Yoga • ${karanaLimb.karana} Karana`;
     
     const structuredForecast = `${headerPanchanga}\n\n` +
-        `💼 CAREER: ${careerText}\n\n` +[cite: 5]
-        `💰 FINANCE: ${financeText}\n\n` +[cite: 4]
-        `🌱 VITALITY: ${healthText}\n\n` +[cite: 12]
-        `⚡ STRATEGIC STRENGTH: ${strengthText}\n\n` +[cite: 7]
-        `⚠️ CAUTIONARY FOCUS: ${cautionText}\n\n` +[cite: 9]
-        `🧘 DAILY REMEDY: ${remedyText}`;[cite: 6, 10]
+        `💼 CAREER: ${careerText}\n\n` +
+        `💰 FINANCE: ${financeText}\n\n` +
+        `🌱 VITALITY: ${healthText}\n\n` +
+        `⚡ STRATEGIC STRENGTH: ${strengthText}\n\n` +
+        `⚠️ CAUTIONARY FOCUS: ${cautionText}\n\n` +
+        `🧘 DAILY REMEDY: ${remedyText}`;
 
     const baseAttentionText = addonComputeAttention(birthRasi, transitMoonLong);
     const guidanceMetrics = addonComputeGuidance(birthProfile.nakshatra.number, transitNakshatraIndex);
 
     return {
         forecast: structuredForecast,
-        // Prepending DOB verification strings gracefully inside your Attention Areas panel space
-        attention: `${dobVerificationBlock}${baseAttentionText}`,
+        attention: baseAttentionText, // Restored back to native array configuration
         guidance: guidanceMetrics
     };
 }
