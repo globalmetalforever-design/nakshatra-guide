@@ -1,7 +1,21 @@
 import { getBirthData } from "./birth_engine.js?v=100";
 import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=100";
+import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=100";
 
 let currentBirthProfile = null;
+
+function updateHistoryCardHeader() {
+    const historyBox = document.getElementById("attentionBox");
+    if (!historyBox) return;
+
+    const cardParent = historyBox.closest('.card');
+    if (cardParent) {
+        const headerElement = cardParent.querySelector('.card-header') || cardParent.querySelector('h3') || cardParent.querySelector('h2');
+        if (headerElement) {
+            headerElement.innerText = "History";
+        }
+    }
+}
 
 function initializeDatePicker() {
     const datePicker = document.getElementById("forecast-date-input");
@@ -46,14 +60,19 @@ async function loadStoredProfileAndRender() {
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
         if (document.getElementById("notePanel")) document.getElementById("notePanel").style.display = "none";
         
-        // Hide the standalone Attention container layout fully
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
-            panelsContainer.style.gridTemplateColumns = "1fr"; // Force the main Forecast block to span full width
+            panelsContainer.style.gridTemplateColumns = "2fr 1fr"; 
+            panelsContainer.style.gap = "20px";
         }
-        const attentionCard = document.getElementById("attentionBox")?.closest('.card') || document.getElementById("attentionBox");
-        if (attentionCard) attentionCard.style.display = "none";
+        
+        const historyBox = document.getElementById("attentionBox");
+        if (historyBox) {
+            const historyCard = historyBox.closest('.card') || historyBox;
+            historyCard.style.display = "block";
+            updateHistoryCardHeader();
+        }
 
         const datePicker = document.getElementById("forecast-date-input");
         const targetDate = datePicker && datePicker.value ? new Date(datePicker.value) : new Date();
@@ -67,9 +86,42 @@ async function loadStoredProfileAndRender() {
 async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) {
     try {
         const dynamicForecast = await generateDailyForecast(storedBirthProfile, targetDate);
-
         const forecastBox = document.getElementById("forecastBox");
         if (forecastBox) forecastBox.innerText = dynamicForecast.forecast;
+
+        // INJECT DYNAMIC MANUAL HISTORY INPUT FIELD
+        const historyBox = document.getElementById("attentionBox");
+        if (historyBox) {
+            updateHistoryCardHeader();
+            
+            historyBox.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; font-size:0.85rem; opacity:0.7; margin-bottom:6px;">Enter History Date (DD-MM-YYYY):</label>
+                    <input type="text" id="history-manual-date" placeholder="DD-MM-YYYY" maxlength="10" style="width:100%; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.15); padding:8px; border-radius:4px; color:#fff; font-family:inherit; outline:none; font-size:0.95rem;">
+                </div>
+                <div id="historyDisplayResult" style="font-size:0.9rem; opacity:0.85; line-height:1.5; white-space:pre-wrap; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; font-style:italic; color:rgba(255,255,255,0.5);">
+                    Enter a past date above to unlock historical forecast details...
+                </div>
+            `;
+
+            const historyInput = document.getElementById("history-manual-date");
+            
+            // Auto-hyphenation formatting stream as the user types
+            historyInput.addEventListener("input", (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 2 && v.length <= 4) {
+                    v = `${v.slice(0, 2)}-${v.slice(2)}`;
+                } else if (v.length > 4) {
+                    v = `${v.slice(0, 2)}-${v.slice(2, 4)}-${v.slice(4, 8)}`;
+                }
+                e.target.value = v;
+
+                // Trigger calculation automatically once a complete date (10 chars) is registered
+                if (v.length === 10) {
+                    processManualHistoryLookup(storedBirthProfile, v);
+                }
+            });
+        }
 
         if (document.getElementById("luckyColor")) document.getElementById("luckyColor").innerText = dynamicForecast.guidance.luckyColor;
         if (document.getElementById("luckyNumber")) document.getElementById("luckyNumber").innerText = dynamicForecast.guidance.luckyNumber;
@@ -79,6 +131,34 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
 
     } catch (error) {
         console.error("Dashboard render failed:", error);
+    }
+}
+
+/**
+ * Resolves manual text field date inputs, formats them back into ephemeris parts,
+ * and pushes the final forecast string into the sub-history result display block.
+ */
+async function processManualHistoryLookup(profile, formattedDateString) {
+    const resultBox = document.getElementById("historyDisplayResult");
+    if (!resultBox) return;
+
+    resultBox.innerHTML = `<span style="opacity:0.5;">Calculating historical snapshot...</span>`;
+
+    try {
+        const [dd, mm, yyyy] = formattedDateString.split("-").map(Number);
+        if (isNaN(dd) || isNaN(mm) || isNaN(yyyy) || mm < 1 || mm > 12 || dd < 1 || dd > 31) {
+            resultBox.innerText = "Invalid date values entered. Please confirm format matches DD-MM-YYYY.";
+            return;
+        }
+
+        const explicitHistoryDate = new Date(yyyy, mm - 1, dd, 12, 0, 0);
+        const historicalPayload = await generateHistoryForecast(profile, explicitHistoryDate);
+        
+        resultBox.style.fontStyle = "normal";
+        resultBox.style.color = "#fff";
+        resultBox.innerText = historicalPayload.forecast;
+    } catch (err) {
+        resultBox.innerText = "Error tracking historical metrics. Ensure parameters are clean.";
     }
 }
 
@@ -101,7 +181,6 @@ async function handleSubmit() {
 
         currentBirthProfile = await getBirthData(inputPayload);
 
-        // Retain specific city strings cleanly inside inputPayload configurations
         currentBirthProfile.inputs = { 
             date: dobValue, 
             time: tobValue, 
@@ -157,14 +236,19 @@ async function handleConfirm() {
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
         if (document.getElementById("notePanel")) document.getElementById("notePanel").style.display = "none";
         
-        // Ensure standalone Attention box hides dynamically upon real-time confirmation execution[cite: 14]
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
-            panelsContainer.style.gridTemplateColumns = "1fr";
+            panelsContainer.style.gridTemplateColumns = "2fr 1fr";
+            panelsContainer.style.gap = "20px";
         }
-        const attentionCard = document.getElementById("attentionBox")?.closest('.card') || document.getElementById("attentionBox");
-        if (attentionCard) attentionCard.style.display = "none";
+
+        const historyBox = document.getElementById("attentionBox"); 
+        if (historyBox) {
+            const historyCard = historyBox.closest('.card') || historyBox;
+            historyCard.style.display = "block";
+            updateHistoryCardHeader();
+        }
 
         const datePicker = document.getElementById("forecast-date-input");
         const targetDate = datePicker && datePicker.value ? new Date(datePicker.value) : new Date();
