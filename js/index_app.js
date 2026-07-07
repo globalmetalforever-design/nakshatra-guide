@@ -4,6 +4,9 @@ import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons
 
 let currentBirthProfile = null;
 
+/**
+ * UI Helper: Forces the attention block container header to read "History"
+ */
 function updateHistoryCardHeader() {
     const historyBox = document.getElementById("attentionBox");
     if (!historyBox) return;
@@ -25,6 +28,10 @@ function initializeDatePicker() {
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
         datePicker.value = `${yyyy}-${mm}-${dd}`;
+    }
+    const pickerDisplay = document.getElementById("forecast-date-input-display");
+    if (pickerDisplay && datePicker) {
+        pickerDisplay.innerText = datePicker.value;
     }
 }
 
@@ -63,10 +70,10 @@ async function loadStoredProfileAndRender() {
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
-            panelsContainer.style.gridTemplateColumns = "2fr 1fr"; 
+            panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)"; 
             panelsContainer.style.gap = "20px";
         }
-        
+
         const historyBox = document.getElementById("attentionBox");
         if (historyBox) {
             const historyCard = historyBox.closest('.card') || historyBox;
@@ -87,9 +94,11 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
     try {
         const dynamicForecast = await generateDailyForecast(storedBirthProfile, targetDate);
         const forecastBox = document.getElementById("forecastBox");
-        if (forecastBox) forecastBox.innerText = dynamicForecast.forecast;
+        
+        if (forecastBox) {
+            forecastBox.innerHTML = dynamicForecast.forecast.split('\n').join('<br>');
+        }
 
-        // INJECT DYNAMIC MANUAL HISTORY INPUT FIELD
         const historyBox = document.getElementById("attentionBox");
         if (historyBox) {
             updateHistoryCardHeader();
@@ -99,14 +108,13 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
                     <label style="display:block; font-size:0.85rem; opacity:0.7; margin-bottom:6px;">Enter History Date (DD-MM-YYYY):</label>
                     <input type="text" id="history-manual-date" placeholder="DD-MM-YYYY" maxlength="10" style="width:100%; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.15); padding:8px; border-radius:4px; color:#fff; font-family:inherit; outline:none; font-size:0.95rem;">
                 </div>
-                <div id="historyDisplayResult" style="font-size:0.9rem; opacity:0.85; line-height:1.5; white-space:pre-wrap; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; font-style:italic; color:rgba(255,255,255,0.5);">
-                    Enter a past date above to unlock historical forecast details...
+                <div id="historyDisplayResult" style="font-size:0.88rem; opacity:0.85; line-height:1.5; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; font-style:italic; color:rgba(255,255,255,0.5); max-height:260px; overflow-y:auto;">
+                    Enter any date above to unlock historical forecast details...
                 </div>
             `;
 
             const historyInput = document.getElementById("history-manual-date");
             
-            // Auto-hyphenation formatting stream as the user types
             historyInput.addEventListener("input", (e) => {
                 let v = e.target.value.replace(/\D/g, '');
                 if (v.length > 2 && v.length <= 4) {
@@ -116,7 +124,6 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
                 }
                 e.target.value = v;
 
-                // Trigger calculation automatically once a complete date (10 chars) is registered
                 if (v.length === 10) {
                     processManualHistoryLookup(storedBirthProfile, v);
                 }
@@ -134,15 +141,11 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
     }
 }
 
-/**
- * Resolves manual text field date inputs, formats them back into ephemeris parts,
- * and pushes the final forecast string into the sub-history result display block.
- */
 async function processManualHistoryLookup(profile, formattedDateString) {
     const resultBox = document.getElementById("historyDisplayResult");
     if (!resultBox) return;
 
-    resultBox.innerHTML = `<span style="opacity:0.5;">Calculating historical snapshot...</span>`;
+    resultBox.innerHTML = `<span style="opacity:0.5; font-style:italic;">Calculating historical snapshot...</span>`;
 
     try {
         const [dd, mm, yyyy] = formattedDateString.split("-").map(Number);
@@ -156,9 +159,9 @@ async function processManualHistoryLookup(profile, formattedDateString) {
         
         resultBox.style.fontStyle = "normal";
         resultBox.style.color = "#fff";
-        resultBox.innerText = historicalPayload.forecast;
+        resultBox.innerHTML = historicalPayload.forecast.split('\n').join('<br>');
     } catch (err) {
-        resultBox.innerText = "Error tracking historical metrics. Ensure parameters are clean.";
+        resultBox.innerText = "Error tracking historical metrics.";
     }
 }
 
@@ -239,14 +242,12 @@ async function handleConfirm() {
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
-            panelsContainer.style.gridTemplateColumns = "2fr 1fr";
+            panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
             panelsContainer.style.gap = "20px";
         }
 
         const historyBox = document.getElementById("attentionBox"); 
         if (historyBox) {
-            const historyCard = historyBox.closest('.card') || historyBox;
-            historyCard.style.display = "block";
             updateHistoryCardHeader();
         }
 
@@ -290,8 +291,83 @@ document.addEventListener("DOMContentLoaded", () => {
             if (currentBirthProfile && event.target.value) {
                 const [y, m, d] = event.target.value.split("-").map(Number);
                 const targetedLocalDate = new Date(y, m - 1, d, 12, 0, 0);
+                
+                const pickerDisplay = document.getElementById("forecast-date-input-display");
+                if (pickerDisplay) pickerDisplay.innerText = event.target.value;
+                
                 await renderUserDashboard(currentBirthProfile, targetedLocalDate);
             }
         });
     }
 });
+/**
+ * Celestial Addon: Renders an independent, low-overhead HTML5 Canvas 
+ * animated starfield constellation matrix directly into the UI background layer.
+ */
+function initializeGalaxyStarfield() {
+    const canvas = document.getElementById('starfield-bg');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const numStars = 240; // Perfect count for a rich galaxy without impacting rendering performance
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Generate individual star coordinate structures with distinct sizes and twinkle rates
+    for (let i = 0; i < numStars; i++) {
+        const isSupergiant = Math.random() > 0.95; 
+    const starSize = isSupergiant ? (Math.random() * 4.5 + 3.0) : (Math.random() * 2.0 + 0.8);
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 3.0 + 1.0,
+            alpha: Math.random(),
+            twinkleSpeed: 0.005 + Math.random() * 0.015,
+            direction: Math.random() > 0.5 ? 1 : -1
+        });
+    }
+
+    // Continuous Animation Loop
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Render background void tint
+        ctx.fillStyle = '#060d1a'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw and update star coordinates
+        for (let i = 0; i < numStars; i++) {
+            let s = stars[i];
+            
+            // Adjust opacity delta to handle organic twinkling
+            s.alpha += s.twinkleSpeed * s.direction;
+            if (s.alpha >= 1 || s.alpha <= 0.1) {
+                s.direction *= -1; // Reverse twinkle glow wave
+            }
+
+            // Draw glowing star points
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 220, 150, ${s.alpha})`; // Elegant soft gold star colors
+            ctx.fill();
+        }
+        
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+}
+
+// Fire the background engine immediately when the DOM initializes
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeGalaxyStarfield);
+} else {
+    initializeGalaxyStarfield();
+}
