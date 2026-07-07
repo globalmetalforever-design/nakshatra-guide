@@ -1,3 +1,4 @@
+import { checkPlanetaryVedha } from "./panchanga_limbs/vedha_addon.js";
 import { getSwiss, normalizeDegrees } from "../../js/birth_engine.js?v=100";
 import { calculateVaraAndYoga } from "./panchanga_limbs/vara_yoga_addon.js";
 import { calculateKarana } from "./panchanga_limbs/karana_addon.js";
@@ -51,8 +52,18 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
 
     // --- CATEGORY A: CAREER ALGORITHM ---
     let careerScore = 0;
-    if ([3, 6, 10, 11].includes(houseMap.sun)) careerScore += 2; else careerScore -= 1;
-    if ([3, 6, 11].includes(houseMap.mars)) careerScore += 2; else careerScore -= 1;
+    if ([3, 6, 10, 11].includes(houseMap.sun)) {
+        const isBlocked = checkPlanetaryVedha("sun", houseMap.sun, houseMap);
+        careerScore += isBlocked ? 0 : 2; // Favorable score drops to neutral zero if blocked by Vedha
+    } else {
+        careerScore -= 1;
+    }
+    if ([3, 6, 11].includes(houseMap.mars)) {
+        const isBlocked = checkPlanetaryVedha("mars", houseMap.mars, houseMap);
+        careerScore += isBlocked ? 0 : 2;
+    } else {
+        careerScore -= 1;
+    }
     if ([3, 6, 11].includes(houseMap.saturn)) careerScore += 1;
     if ([1, 2, 4, 7, 8, 12].includes(houseMap.saturn)) careerScore -= 2;
 
