@@ -375,7 +375,7 @@ button{
     padding-top: 8px;
     font-size: 1.15rem;
     color: #ffffff;
-    line-height: 2.0;
+    line-height: 2.0px;
 }
 
 /* Guidance values */
@@ -391,4 +391,36 @@ button{
 .panel h2,
 .panel h3 {
     color: #ffd36b;
+}
+/* ==========================================
+   MOBILE RESPONSIVE MEDIA QUERY UPGRADE 
+   ========================================== */
+@media screen and (max-width: 768px) {
+    /* Force the project layout wrapper container to drop padding margins gently */
+    .dashboard-container {
+        padding: 10px;
+    }
+
+    /* Remap the three column row grids to fall down into a stack of 1 full-width column */
+    .dashboard-row-three-columns {
+        grid-template-columns: 1fr !important; /* Forces single panel flow one below another */
+        gap: 15px; /* Pulls panels slightly closer for tight mobile tracking */
+    }
+
+    /* Force the logo graphics block to behave natively under tight screen widths */
+    .card.branding-card-panel {
+        max-height: 220px; /* Limits graphic height so the user doesn't have to scroll infinitely */
+        padding: 10px;
+    }
+
+    /* Allow mobile scrollable content containers to expand naturally or manage heights securely */
+    .scrollable-content {
+        max-height: none !important; /* Prevents awkward double-scrollbar behavior on mobile views */
+    }
+
+    /* Optional: Make text input fields stretch cleanly for easy thumb-tapping access */
+    input[type="date"], input[type="time"], input[type="text"], .btn {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
 }
