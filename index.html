@@ -4,162 +4,109 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nakshatra Guide Dashboard</title>
-    <style>
-        body {
-            background-color: #0a1128;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 20px;
-        }
-        .card {
-            background-color: #111a36;
-            border: 1px solid #1e294b;
-            border-radius: 8px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 0.85rem;
-            color: #b3b3b3;
-        }
-        input, select, button {
-            background-color: #1e294b;
-            border: 1px solid #2e3b66;
-            color: white;
-            padding: 10px 12px;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator,
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
-        input:focus, select:focus {
-            outline: 1px solid #ffcc00;
-        }
-        button {
-            background-color: #ffcc00;
-            color: #0a1128;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px;
-            align-items: stretch;
-            margin-bottom: 20px;
-        }
-
-        .forecast-split {
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px;
-        }
-
-        @media (max-width: 850px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr; 
-            }
-            .forecast-split {
-                grid-template-columns: 1fr; 
-            }
-            body {
-                margin: 10px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css?v=101">
 </head>
 <body>
-
-    <h1 style="text-align: center; color: #ffcc00; margin-bottom: 30px; letter-spacing: 1px; font-size: 2rem;">NAKSHATRA GUIDE</h1>
-
-    <div class="dashboard-grid">
-        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 15px;">
-            <div>
-                <h3 style="margin-top: 0; color: #ffcc00;">Astrological Profile</h3>
-                <div style="margin-bottom: 12px;">
-                    <label for="dob">Date of Birth</label>
-                    <input type="date" id="dob" style="width: 100%; box-sizing: border-box;">
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label for="tob">Time of Birth</label>
-                    <input type="time" id="tob" style="width: 100%; box-sizing: border-box;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label for="pob">Place of Birth</label>
-                    <input type="text" id="pob" placeholder="City" style="width: 100%; box-sizing: border-box;">
-                </div>
-            </div>
+<canvas id="starfield-bg"></canvas>
+    <div class="dashboard-container">
+        
+        <div class="dashboard-row-three-columns">
             
-            <div style="display: flex; gap: 8px; width: 100%;">
-                <button id="submitBtn" style="width: 100%; padding: 12px;">Submit</button>
-                <button id="confirmBtn" style="flex: 1; padding: 12px; display: none; background-color: #28a745; color: white;">Confirm</button>
-                <button id="rejectBtn" style="flex: 1; padding: 12px; display: none; background-color: #dc3545; color: white;">Reject</button>
+            <div class="card branding-card-panel">
+                <div class="branding-image-container">
+                    <img src="ng head.jpg" alt="Nakshatra Guide Header" class="scaled-panel-img">
+                </div>
             </div>
+
+            <div class="card outlined-card">
+                <div class="card-header">Astrological Profile</div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tob">Time of Birth</label>
+                        <input type="time" id="tob" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="birth-place-input">Place of Birth</label>
+                        <input type="text" id="birth-place-input" placeholder="City" value="Chennai">
+                    </div>
+                    
+                    <button id="submitBtn" class="btn primary-btn">Submit</button>
+                </div>
+            </div>
+
+            <div class="card outlined-card">
+                <div class="card-header">Detected Nakshatra</div>
+                <div class="card-body">
+                    <div id="detectedNakshatra" class="highlight-text">Waiting for Birth Details</div>
+                    <div id="detectedPada" class="sub-highlight-text"></div>
+                    
+                    <div class="rasi-zodiac-details">
+                        <div>Vedic Moon Sign (Rasi): <strong id="vedicRasi">-</strong></div>
+                        <div style="margin-top: 8px;">Western Sun Sign: <strong id="westernZodiac">-</strong></div>
+                    </div>
+                    
+                    <div class="action-buttons-group" style="margin-top: 20px;">
+                        <button id="confirmBtn" style="display: none;" class="btn confirm-btn">Confirm</button>
+                        <button id="rejectBtn" style="display: none;" class="btn reject-btn">Reject</button>
+                        <button id="resetBtn" style="display: none;" class="btn reset-btn">Reset Profile and enter fresh data</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="card" style="display: flex; flex-direction: column; min-height: 250px;">
-            <h3 style="margin-top: 0; color: #ffcc00;">Detected Nakshatra</h3>
-            <h2 id="detectedNakshatra" style="color: #ffffff; margin: 15px 0 5px 0; font-size: 1.8rem;">Waiting for Birth Details</h2>
-            <h4 id="detectedPada" style="margin: 0 0 20px 0; color: #ffcc00; font-weight: normal;"></h4>
-            <div style="margin-top: auto; line-height: 1.8; color: #b3b3b3; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-                <p style="margin: 4px 0;">Vedic Moon Sign (Rasi): <strong id="vedicRasi" style="color: white;">-</strong></p>
-                <p style="margin: 4px 0;">Western Sun Sign: <strong id="westernZodiac" style="color: white;">-</strong></p>
+        <hr class="golden-dashboard-divider">
+
+        <div id="forecastAndAttentionPanels" class="dashboard-row-three-columns" style="display: none; margin-top: 20px;">
+            
+            <div class="card outlined-card">
+                <div class="card-header">Daily Forecast</div>
+                <div id="forecastBox" class="card-body scrollable-content tight-forecast-text">
+                    Calculating coordinates...
+                </div>
             </div>
-            <div style="margin-top: 15px;">
-                <button id="resetBtn" style="background-color: #ff8080; color: #0a1128; font-size: 0.85rem; padding: 6px 12px; display: none; width: 100%;">Reset Profile</button>
+
+            <div class="card outlined-card">
+                <div class="card-header">Today's Guidance</div>
+                <div class="card-body">
+                    <div class="target-date-display">
+                        <label for="forecast-date-input">Target Calculation Date</label>
+                        <input type="date" id="forecast-date-input">
+                        <div style="margin-top: 6px; font-size: 0.8rem; opacity: 0.6;">
+                            Viewing: <span id="forecast-date-input-display">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="guidance-metrics-list" style="margin-top: 15px;">
+                        <div class="guidance-metric-item"><strong>Lucky Color:</strong> <span id="luckyColor">-</span></div>
+                        <div class="guidance-metric-item"><strong>Lucky Number:</strong> <span id="luckyNumber">-</span></div>
+                        <div class="guidance-metric-item"><strong>Favorable time:</strong> <span id="goodTime">-</span></div>
+                        <div class="guidance-metric-item"><strong>Unfavorable time:</strong> <span id="badTime">-</span></div>
+                        
+                        <div class="strategic-focus-item">
+                            <strong>Strategic Focus:</strong>
+                            <div id="dailyAction">-</div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <div class="card outlined-card">
+                <div class="card-header">History</div>
+                <div id="attentionBox" class="card-body scrollable-content">
+                    </div>
+            </div>
+
         </div>
 
-        <div class="card" id="guidanceCard" style="display: flex; flex-direction: column; border: 2px solid #ffcc00; box-sizing: border-box; background: rgba(255, 204, 0, 0.02);">
-            <h3 style="margin-top: 0; color: #ffcc00;">Today's Guidance</h3>
-            <div style="margin-bottom: 12px;">
-                <label for="forecast-date-input">Target Calculation Date</label>
-                <input type="date" id="forecast-date-input" style="width: 100%; box-sizing: border-box;">
-            </div>
-            <div id="guidanceStaticPlaceholder" style="margin-top: auto; line-height: 1.8;">
-                <ul style="list-style: none; padding: 0; margin: 0; color: #ffffff;">
-                    <li><strong>Lucky Color:</strong> <span id="luckyColor">-</span></li>
-                    <li><strong>Lucky Number:</strong> <span id="luckyNumber">-</span></li>
-                    <li><strong>Favorable time:</strong> <span id="goodTime">-</span></li>
-                    <li><strong>Unfavorable time:</strong> <span id="badTime">-</span></li>
-                    <li style="margin-top: 10px; line-height: 1.4;"><strong>Strategic Focus:</strong> <br><span id="dailyAction" style="color: #ffcc00; font-size: 0.9rem;">Confirm your profile details to unlock guidance timelines.</span></li>
-                </ul>
-            </div>
-        </div>
     </div>
 
-    <div id="dynamicBottomArea" style="margin-top: 20px;">
-        <div id="notePanel" class="card" style="background: rgba(255,255,255,0.01); border-left: 4px solid #ffcc00; padding: 15px;">
-            <h4 style="margin-top: 0; color: #ffcc00;">Note</h4>
-            <p style="margin: 0; line-height: 1.5; color: #cccccc; font-size: 0.95rem;">
-                Enter Birth Details, press the Submit button, your Nakshatra with Pada will be displayed in the Detected Nakshatra panel. If it is correct, press the Confirm button, otherwise press the Reject button and re-enter the Birth Details. Once the Confirm button is pressed, your Forecast, Attention Areas, Historical Forecast and Today's Guidance will be displayed below.
-            </p>
-        </div>
-
-        <div id="forecastAndAttentionPanels" class="forecast-split" style="display: none;">
-            <div class="card" style="border-top: 3px solid #28a745;">
-                <h4 style="color: #ffcc00; margin-top: 0; font-size: 1.1rem; margin-bottom: 10px;">Daily Forecast</h4>
-                <p id="forecastBox" style="color: #ffffff; line-height: 1.5; margin: 0; font-size: 0.95rem;">Recalculating charts...</p>
-            </div>
-            <div class="card" style="border-top: 3px solid #dc3545;">
-                <h4 style="color: #ffcc00; margin-top: 0; font-size: 1.1rem; margin-bottom: 10px;">Attention Areas</h4>
-                <p id="attentionBox" style="color: #ffffff; line-height: 1.5; margin: 0; font-size: 0.95rem;">Recalculating focus areas...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Force a comprehensive browser module compilation update across all mobile and desktop windows -->
-    <script type="module" src="js/index_app.js?v=100"></script>
+    <script type="module" src="js/index_app.js?v=101"></script>
 </body>
 </html>

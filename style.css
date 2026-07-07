@@ -11,7 +11,208 @@ body{
 #historyText {
     color: #ffffff;
 }
+.brand-header-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0 10px 0;
+}
+/* Flex or grid mapping utilities to keep rows perfectly equal across devices */
+.dashboard-row-three-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+}
 
+/* Card panel designed to handle the graphic background */
+.card.branding-card-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 10px;
+}
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Row wrapper designed to align elements into 3 equal widths side-by-side */
+.dashboard-row-three-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+}
+
+/* Central Graphic panel wrapper layout logic */
+.card.branding-card-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 15px;
+    background: rgba(10, 20, 38, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.branding-image-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Scales the graphic graphic perfectly to the boundaries of panel 2 */
+.scaled-panel-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+/* Outlined card frame borders to perfectly encase layout panels */
+.card.outlined-card {
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background: rgba(10, 20, 38, 0.3);
+}
+
+/* Enforce the exact typography metrics from Guidance to halt text spillages */
+.tight-forecast-text {
+    font-size: 0.85rem !important; /* Scaled down perfectly to match guidance typography */
+    line-height: 1.4 !important;
+    white-space: pre-line;
+}
+
+/* Row wrapper grid alignment layout */
+.dashboard-row-three-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    width: 100%;
+}
+
+.card.branding-card-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 15px;
+    background: rgba(10, 20, 38, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+/* Position the star canvas layer firmly behind all user interface elements */
+#starfield-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; /* Pushes it fully into the absolute back layer */
+    pointer-events: none;
+}
+
+/* Ensure the main document body container handles transparency over the canvas */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #060d1a; /* Matches the star void */
+    font-family: inherit;
+    min-height: 100vh;
+}
+
+/* Turn background cards slightly translucent so the star clusters peek through elegantly */
+.card.outlined-card, .card.branding-card-panel {
+    background: rgba(10, 20, 38, 0.65) !important; /* Semi-transparent cosmic blue backing */
+    backdrop-filter: blur(4px); /* Softly blurs the stars behind cards for supreme readability */
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.branding-image-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.scaled-panel-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+/* Enforces readable text heights inside Row 2 */
+.scrollable-content {
+    max-height: 380px;
+    overflow-y: auto;
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.guidance-metric-item {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.strategic-focus-item {
+    margin-top: 12px;
+    padding-top: 8px;
+}
+
+#dailyAction {
+    color: #ffcc00;
+    margin-top: 4px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+.branding-image-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Forces the graphic asset to fill its container panel seamlessly without overflowing */
+.scaled-panel-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+/* Keeps dashboard text blocks neat inside Row 2 */
+.scrollable-content {
+    max-height: 380px;
+    overflow-y: auto;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+.brand-header-img {
+    max-width: 550px; /* Perfectly limits size for premium desktop and mobile views */
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
+    transition: transform 0.3s ease;
+}
+
+/* Subtle hover interaction to make the branding feel reactive */
+.brand-header-img:hover {
+    transform: scale(1.02);
+}
 /* If paragraphs are used inside the cards */
 .forecast-card p,
 .guidance-card p,
@@ -174,7 +375,7 @@ button{
     padding-top: 8px;
     font-size: 1.15rem;
     color: #ffffff;
-    line-height: 1.7;
+    line-height: 2.0;
 }
 
 /* Guidance values */
