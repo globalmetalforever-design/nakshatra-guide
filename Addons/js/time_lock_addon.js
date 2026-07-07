@@ -47,15 +47,9 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     };
 
     const transitNakshatraIndex = Math.floor(transitMoonLong / (360 / 27));
-    
-    // Seed using target date parameters to cycle index results predictably within a tier
     const phraseSelectorIndex = targetDay;
 
-    // ==========================================
-    // 3. MATHEMATICAL SYNTHESIS ALGORITHMIC RULES
-    // ==========================================
-
-    // --- CATEGORY A: CAREER ALGORITHM (Driven by Sun, Mars, Saturn) ---
+    // --- CATEGORY A: CAREER ALGORITHM ---
     let careerScore = 0;
     if ([3, 6, 10, 11].includes(houseMap.sun)) careerScore += 2; else careerScore -= 1;
     if ([3, 6, 11].includes(houseMap.mars)) careerScore += 2; else careerScore -= 1;
@@ -68,13 +62,12 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     
     let careerText = PHRASE_BANK.career[careerTier][phraseSelectorIndex % PHRASE_BANK.career[careerTier].length];
 
-    // Mercury Modulator: Append analytical learning traits to career if Mercury is favorable
     if ([2, 4, 6, 8, 10, 11].includes(houseMap.mercury)) {
         const learningAddition = PHRASE_BANK.learning[phraseSelectorIndex % PHRASE_BANK.learning.length];
         careerText += ` Plus, ${learningAddition.toLowerCase()}`;
     }
 
-    // --- CATEGORY B: FINANCE ALGORITHM (Driven by Jupiter, Venus, Rahu) ---
+    // --- CATEGORY B: FINANCE ALGORITHM ---
     let financeScore = 0;
     if ([2, 5, 7, 9, 11].includes(houseMap.jupiter)) financeScore += 3; else financeScore -= 2;
     if ([1, 2, 3, 4, 5, 8, 9, 11, 12].includes(houseMap.venus)) financeScore += 1; else financeScore -= 1;
@@ -87,38 +80,28 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
 
     let financeText = PHRASE_BANK.finance[financeTier][phraseSelectorIndex % PHRASE_BANK.finance[financeTier].length];
 
-    // --- CATEGORY C: VITALITY & RELATIONSHIPS (Driven by Moon & Venus) ---
+    // --- CATEGORY C: VITALITY & RELATIONSHIPS ---
     let healthText = PHRASE_BANK.health[phraseSelectorIndex % PHRASE_BANK.health.length];
-    // Modulate wellness text downward if the Moon is transiting a difficult dusthana house
     if ([6, 8, 12].includes(houseMap.moon)) {
         healthText = "Energy levels require conservative management; avoid taking on unnecessary structural strain.";
     }
-
-    // Include relationship phrases based on Venus configurations
     const relationshipText = PHRASE_BANK.relationships[phraseSelectorIndex % PHRASE_BANK.relationships.length];
 
     // --- CATEGORY D: STRENGTHS, CAUTIONS & REMEDIES ---
     let strengthText = PHRASE_BANK.strengths[phraseSelectorIndex % PHRASE_BANK.strengths.length];
-    // The Initiative Trigger: Double power bonus if Sun and Mars are both tracking positively
     if ([3, 6, 10, 11].includes(houseMap.sun) && [3, 6, 11].includes(houseMap.mars)) {
         strengthText = `Peak operational execution. Bold but thoughtful decisions succeed.`;
     }
 
     let cautionText = PHRASE_BANK.caution[phraseSelectorIndex % PHRASE_BANK.caution.length];
-    // Saturn Brake: Override with intense structural caution warning if tracking Sade Sati or Ashtama transits
     if ([12, 1, 2, 8].includes(houseMap.saturn)) {
         cautionText = "Systemic delays or auditing bottlenecks demand strict validation. Review details before making decisions.";
     }
 
     const remedyText = PHRASE_BANK.spirituality[phraseSelectorIndex % PHRASE_BANK.spirituality.length];
-
-    // --- CATEGORY E: COMBINED ATTENTION CONTEXT ---
-    const attentionText = addonComputeAttention(birthRasi, houseMap.moon);
     const guidanceMetrics = addonComputeGuidance(birthProfile.nakshatra.number, transitNakshatraIndex, careerTier, financeTier);
 
-    // ==========================================
-    // 4. STRING PACKAGER & COMPILATION
-    // ==========================================
+    // Formatted single line structures - Completely removed Attention string block from the bottom
     const singleLineForecast = 
         `💼 CAREER: ${careerText}\n` +
         `💰 FINANCE: ${financeText}\n` +
@@ -126,8 +109,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
         `🤝 ALLIANCES: ${relationshipText}\n` +
         `⚡ STRENGTH: ${strengthText}\n` +
         `⚠️ CAUTION: ${cautionText}\n` +
-        `🧘 REMEDY: ${remedyText}\n\n` +
-        `🎯 ATTENTION AREAS:\n${attentionText}`;
+        `🧘 REMEDY: ${remedyText}`;
 
     return {
         forecast: singleLineForecast,
@@ -135,23 +117,10 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     };
 }
 
-function addonComputeAttention(birthRasiNum, transitMoonHouse) {
-    if (transitMoonHouse === 1) return "Focus intensely on physical vitality, self-presentation, and prioritizing personal energy boundaries today.";
-    if (transitMoonHouse === 4) return "Prioritize home environment stability, clear family check-ins, and deep psychological rejuvenation.";
-    if (transitMoonHouse === 7) return "Attention shifts directly toward partnerships, close interpersonal relations, and mutual agreements.";
-    if (transitMoonHouse === 8) return "Review hidden operational issues, auditing processes, research milestones, or legacy records with extra care.";
-    if (transitMoonHouse === 10) return "High professional visibility today. Direct focus toward launching strategic vocational milestones.";
-    if (transitMoonHouse === 12) return "High mental expenditures. Prioritize back-office cleaning, clearing digital storage spaces, and deep sleep cycles.";
-
-    return "Maintain your baseline routine tracking. Review open logistical files and handle standard milestones.";
-}
-
 function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTier, financeTier) {
     const transitNakshatraNum = transitBakshatraIndex + 1;
     const distance = ((transitNakshatraNum - birthNakshatraNum + 27) % 27) + 1;
     const score = (distance % 9) || 9;
-    
-    // Tarabala or planet logic checks
     const isFavorable = [2, 4, 6, 8, 9].includes(score) && careerTier !== "low";
 
     return {
