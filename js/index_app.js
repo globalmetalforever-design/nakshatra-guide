@@ -1,12 +1,9 @@
-import { getBirthData } from "./birth_engine.js?v=100";
-import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=100";
-import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=100";
+import { getBirthData } from "./birth_engine.js?v=103";
+import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=103";
+import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=103";
 
 let currentBirthProfile = null;
 
-/**
- * UI Helper: Forces the attention block container header to read "History"
- */
 function updateHistoryCardHeader() {
     const historyBox = document.getElementById("attentionBox");
     if (!historyBox) return;
@@ -20,31 +17,33 @@ function updateHistoryCardHeader() {
     }
 }
 
-function initializeDatePicker() {
-    const datePicker = document.getElementById("forecast-date-input");
-    if (datePicker && !datePicker.value) {
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        datePicker.value = `${yyyy}-${mm}-${dd}`;
+function getFormattedCurrentDate(dateObj = new Date()) {
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const yyyy = dateObj.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+}
+
+function normalizeToDisplayDate(dateString) {
+    if (!dateString) return "";
+    if (dateString.includes("-") && dateString.split("-")[0].length === 4) {
+        const [y, m, d] = dateString.split("-");
+        return `${d}-${m}-${y}`;
     }
-    const pickerDisplay = document.getElementById("forecast-date-input-display");
-    if (pickerDisplay && datePicker) {
-        pickerDisplay.innerText = datePicker.value;
-    }
+    return dateString;
 }
 
 function restoreFormInputs(profile) {
     if (!profile || !profile.inputs) return;
-    if (document.getElementById("dob")) document.getElementById("dob").value = profile.inputs.date || "";
+    if (document.getElementById("dob")) {
+        document.getElementById("dob").value = normalizeToDisplayDate(profile.inputs.date || "");
+    }
     if (document.getElementById("tob")) document.getElementById("tob").value = profile.inputs.time || "";
     if (document.getElementById("birth-place-input")) document.getElementById("birth-place-input").value = profile.inputs.place || "";
 }
 
 async function loadStoredProfileAndRender() {
     try {
-        initializeDatePicker();
         const storedData = localStorage.getItem("permanentBirthProfile");
         if (!storedData) return;
 
@@ -65,12 +64,15 @@ async function loadStoredProfileAndRender() {
 
         if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "none";
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
-        if (document.getElementById("notePanel")) document.getElementById("notePanel").style.display = "none";
         
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
-            panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)"; 
+            if (window.innerWidth > 768) {
+                panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
+            } else {
+                panelsContainer.style.gridTemplateColumns = "1fr";
+            }
             panelsContainer.style.gap = "20px";
         }
 
@@ -81,9 +83,7 @@ async function loadStoredProfileAndRender() {
             updateHistoryCardHeader();
         }
 
-        const datePicker = document.getElementById("forecast-date-input");
-        const targetDate = datePicker && datePicker.value ? new Date(datePicker.value) : new Date();
-        await renderUserDashboard(profile, targetDate);
+        await renderUserDashboard(profile, new Date());
     } catch (err) {
         console.error("Local profile engine initialization failure:", err);
         localStorage.removeItem("permanentBirthProfile");
@@ -99,6 +99,11 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             forecastBox.innerHTML = dynamicForecast.forecast.split('\n').join('<br>');
         }
 
+        const activeDateBox = document.getElementById("activeForecastDateDisplay");
+        if (activeDateBox) {
+            activeDateBox.innerText = `Date: ${getFormattedCurrentDate(targetDate)}`;
+        }
+
         const historyBox = document.getElementById("attentionBox");
         if (historyBox) {
             updateHistoryCardHeader();
@@ -108,7 +113,7 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
                     <label style="display:block; font-size:0.85rem; opacity:0.7; margin-bottom:6px;">Enter History Date (DD-MM-YYYY):</label>
                     <input type="text" id="history-manual-date" placeholder="DD-MM-YYYY" maxlength="10" style="width:100%; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.15); padding:8px; border-radius:4px; color:#fff; font-family:inherit; outline:none; font-size:0.95rem;">
                 </div>
-                <div id="historyDisplayResult" style="font-size:0.88rem; opacity:0.85; line-height:1.5; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; font-style:italic; color:rgba(255,255,255,0.5); max-height:260px; overflow-y:auto;">
+                <div id="historyDisplayResult" style="font-size:1.05rem; opacity:0.85; line-height:1.6; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px; font-style:italic; color:rgba(255,255,255,0.5); max-height:260px; overflow-y:auto;">
                     Enter any date above to unlock historical forecast details...
                 </div>
             `;
@@ -166,15 +171,19 @@ async function processManualHistoryLookup(profile, formattedDateString) {
 }
 
 async function handleSubmit() {
-    const dobValue = document.getElementById("dob").value; 
+    const dobInput = document.getElementById("dob").value; 
     const tobValue = document.getElementById("tob").value; 
     const placeValue = document.getElementById("birth-place-input")?.value || ""; 
 
     try {
-        if (!dobValue) throw new Error("Please select your Date of Birth.");
+        if (!dobInput || dobInput.length < 10) throw new Error("Please enter a valid Date of Birth (DD-MM-YYYY).");
         if (!tobValue) throw new Error("Please select your Time of Birth.");
 
-        const [year, month, day] = dobValue.split("-").map(Number);
+        const [day, month, year] = dobInput.split("-").map(Number);
+        if (isNaN(day) || isNaN(month) || isNaN(year) || month < 1 || month > 12 || day < 1 || day > 31) {
+            throw new Error("Invalid date components. Use DD-MM-YYYY format.");
+        }
+
         const [hour, minute] = tobValue.split(":").map(Number);
 
         const inputPayload = {
@@ -185,7 +194,7 @@ async function handleSubmit() {
         currentBirthProfile = await getBirthData(inputPayload);
 
         currentBirthProfile.inputs = { 
-            date: dobValue, 
+            date: dobInput, 
             time: tobValue, 
             place: placeValue,
             year, month, day, hour, minute
@@ -213,11 +222,11 @@ async function handleConfirm() {
     if (!currentBirthProfile) return;
 
     try {
-        const dobValue = document.getElementById("dob").value;
+        const dobInput = document.getElementById("dob").value;
         const tobValue = document.getElementById("tob").value;
         const locationValue = document.getElementById("birth-place-input")?.value || "";
 
-        const [year, month, day] = dobValue.split("-").map(Number);
+        const [day, month, year] = dobInput.split("-").map(Number);
         const [hour, minute] = tobValue.split(":").map(Number);
 
         const profileSavePackage = {
@@ -225,7 +234,7 @@ async function handleConfirm() {
             year, month, day, hour, minute,
             timezone: -(new Date().getTimezoneOffset() / 60),
             inputs: { 
-                date: dobValue, 
+                date: dobInput, 
                 time: tobValue, 
                 place: locationValue,
                 year, month, day, hour, minute
@@ -237,12 +246,15 @@ async function handleConfirm() {
         if (document.getElementById("confirmBtn")) document.getElementById("confirmBtn").style.display = "none";
         if (document.getElementById("rejectBtn")) document.getElementById("rejectBtn").style.display = "none";
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
-        if (document.getElementById("notePanel")) document.getElementById("notePanel").style.display = "none";
         
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
-            panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
+            if (window.innerWidth > 768) {
+                panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
+            } else {
+                panelsContainer.style.gridTemplateColumns = "1fr";
+            }
             panelsContainer.style.gap = "20px";
         }
 
@@ -251,9 +263,7 @@ async function handleConfirm() {
             updateHistoryCardHeader();
         }
 
-        const datePicker = document.getElementById("forecast-date-input");
-        const targetDate = datePicker && datePicker.value ? new Date(datePicker.value) : new Date();
-        await renderUserDashboard(profileSavePackage, targetDate);
+        await renderUserDashboard(profileSavePackage, new Date());
 
     } catch (err) {
         alert("Error executing profile save: " + err.message);
@@ -267,6 +277,7 @@ function handleReject() {
     document.getElementById("submitBtn").style.display = "inline-block";
     document.getElementById("detectedNakshatra").innerText = "Waiting for Birth Details";
     document.getElementById("detectedPada").innerText = "";
+    if (document.getElementById("activeForecastDateDisplay")) document.getElementById("activeForecastDateDisplay").innerText = "";
     if (document.getElementById("vedicRasi")) document.getElementById("vedicRasi").innerText = "-";
     if (document.getElementById("westernZodiac")) document.getElementById("westernZodiac").innerText = "-";
 }
@@ -277,40 +288,13 @@ function handleReset() {
     window.location.reload();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadStoredProfileAndRender();
-
-    document.getElementById("submitBtn")?.addEventListener("click", handleSubmit);
-    document.getElementById("confirmBtn")?.addEventListener("click", handleConfirm);
-    document.getElementById("rejectBtn")?.addEventListener("click", handleReject);
-    document.getElementById("resetBtn")?.addEventListener("click", handleReset);
-    
-    const datePicker = document.getElementById("forecast-date-input");
-    if (datePicker) {
-        datePicker.addEventListener("change", async (event) => {
-            if (currentBirthProfile && event.target.value) {
-                const [y, m, d] = event.target.value.split("-").map(Number);
-                const targetedLocalDate = new Date(y, m - 1, d, 12, 0, 0);
-                
-                const pickerDisplay = document.getElementById("forecast-date-input-display");
-                if (pickerDisplay) pickerDisplay.innerText = event.target.value;
-                
-                await renderUserDashboard(currentBirthProfile, targetedLocalDate);
-            }
-        });
-    }
-});
-/**
- * Celestial Addon: Renders an independent, low-overhead HTML5 Canvas 
- * animated starfield constellation matrix directly into the UI background layer.
- */
 function initializeGalaxyStarfield() {
     const canvas = document.getElementById('starfield-bg');
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
     let stars = [];
-    const numStars = 240; // Perfect count for a rich galaxy without impacting rendering performance
+    const numStars = 120;
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
@@ -320,54 +304,81 @@ function initializeGalaxyStarfield() {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Generate individual star coordinate structures with distinct sizes and twinkle rates
     for (let i = 0; i < numStars; i++) {
         const isSupergiant = Math.random() > 0.95; 
-    const starSize = isSupergiant ? (Math.random() * 4.5 + 3.0) : (Math.random() * 2.0 + 0.8);
+        const starSize = isSupergiant ? (Math.random() * 4.5 + 3.0) : (Math.random() * 2.0 + 0.8);
+
         stars.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: Math.random() * 3.0 + 1.0,
+            size: starSize,
             alpha: Math.random(),
-            twinkleSpeed: 0.005 + Math.random() * 0.015,
+            twinkleSpeed: isSupergiant ? 0.003 : (0.005 + Math.random() * 0.015),
             direction: Math.random() > 0.5 ? 1 : -1
         });
     }
 
-    // Continuous Animation Loop
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Render background void tint
         ctx.fillStyle = '#060d1a'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw and update star coordinates
         for (let i = 0; i < numStars; i++) {
             let s = stars[i];
-            
-            // Adjust opacity delta to handle organic twinkling
             s.alpha += s.twinkleSpeed * s.direction;
-            if (s.alpha >= 1 || s.alpha <= 0.1) {
-                s.direction *= -1; // Reverse twinkle glow wave
-            }
+            if (s.alpha >= 1 || s.alpha <= 0.1) s.direction *= -1;
 
-            // Draw glowing star points
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 220, 150, ${s.alpha})`; // Elegant soft gold star colors
+            ctx.fillStyle = `rgba(255, 220, 150, ${s.alpha})`; 
             ctx.fill();
         }
-        
         requestAnimationFrame(animate);
     }
-
     animate();
 }
 
-// Fire the background engine immediately when the DOM initializes
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeGalaxyStarfield);
-} else {
+document.addEventListener("DOMContentLoaded", () => {
     initializeGalaxyStarfield();
-}
+    loadStoredProfileAndRender();
+
+    document.getElementById("submitBtn")?.addEventListener("click", handleSubmit);
+    document.getElementById("confirmBtn")?.addEventListener("click", handleConfirm);
+    document.getElementById("rejectBtn")?.addEventListener("click", handleReject);
+    document.getElementById("resetBtn")?.addEventListener("click", handleReset);
+    
+    const dobInput = document.getElementById("dob");
+    if (dobInput) {
+        dobInput.addEventListener("input", (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            let formattedValue = '';
+
+            if (v.length > 0) {
+                formattedValue = v.slice(0, 2);
+                if (v.length > 2) {
+                    formattedValue += '-' + v.slice(2, 4);
+                }
+                if (v.length > 4) {
+                    formattedValue += '-' + v.slice(4, 8);
+                }
+            }
+
+            e.target.value = formattedValue;
+
+            if (v.length === 8) {
+                setTimeout(() => {
+                    document.getElementById("tob")?.focus();
+                }, 10);
+            }
+        });
+    }
+
+    const tobInput = document.getElementById("tob");
+    if (tobInput) {
+        tobInput.addEventListener("change", () => {
+            if (tobInput.value) {
+                document.getElementById("birth-place-input")?.focus();
+            }
+        });
+    }
+});
