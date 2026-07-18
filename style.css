@@ -593,3 +593,19 @@ button{
 #mobile-navigation-bar::-webkit-scrollbar {
     display: none;
 }
+/* FORCE FORECAST PARAGRAPHS TO WRAP NATURALLY ON MOBILE SCREENS */
+#forecastBox, #forecastBox * {
+    display: block !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    line-height: 1.6 !important;
+    height: auto !important;
+    position: relative !important;
+}
+
+#forecastBox br {
+    display: block !important;
+    content: "" !important;
+    margin-top: 12px !important;
+}
