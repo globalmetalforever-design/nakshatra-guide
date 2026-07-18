@@ -442,8 +442,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.switchMobileTab = function(tabId) {
-    if (window.innerWidth > 768) return; 
+    if (window.innerWidth > 768) return; // Completely bypass on website/desktop layouts
     
+    // 1. Manage Active Class Colors on Tabs
     const tabs = document.querySelectorAll('.nav-tab');
     tabs.forEach(tab => {
         if (tab.getAttribute('onclick').includes(tabId)) {
@@ -455,13 +456,15 @@ window.switchMobileTab = function(tabId) {
         }
     });
 
-    const forecastBox = document.getElementById("forecastBox")?.closest('.card');
-    const luckyCard = document.getElementById("luckyColor")?.closest('.card');
-    const historyCard = document.getElementById("attentionBox")?.closest('.card');
+    // 2. Select Target Cards by exact ID anchors
+    const forecastCard = document.getElementById("card-forecast");
     const tipsCard = document.getElementById("mobile-tips-card");
+    const importantCard = document.getElementById("card-important");
+    const historyCard = document.getElementById("card-history");
 
-    if (forecastBox) forecastBox.style.display = (tabId === 'forecast') ? 'block' : 'none';
-    if (luckyCard) luckyCard.style.display = (tabId === 'important') ? 'block' : 'none';
-    if (historyCard) historyCard.style.display = (tabId === 'history') ? 'block' : 'none';
+    // 3. Single Page Toggle Router
+    if (forecastCard) forecastCard.style.display = (tabId === 'forecast') ? 'block' : 'none';
     if (tipsCard) tipsCard.style.display = (tabId === 'tips') ? 'block' : 'none';
+    if (importantCard) importantCard.style.display = (tabId === 'important') ? 'block' : 'none';
+    if (historyCard) historyCard.style.display = (tabId === 'history') ? 'block' : 'none';
 };
