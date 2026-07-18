@@ -491,6 +491,22 @@ button{
    MOBILE RESPONSIVE MEDIA QUERY UPGRADE 
    ========================================== */
 @media screen and (max-width: 768px) {
+    .card {
+        height: auto !important; 
+        min-height: unset !important;
+        display: block !important;
+        margin-bottom: 16px !important;
+    }
+    .card-body {
+        display: block !important;
+        height: auto !important;
+    }
+}
+
+/* Clear vertical shifts inside sub navigation segments */
+#mobile-navigation-bar::-webkit-scrollbar {
+    display: none;
+}
     /* Force the project layout wrapper container to drop padding margins gently */
     .dashboard-container {
         padding: 10px;
