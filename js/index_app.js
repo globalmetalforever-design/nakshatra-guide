@@ -157,7 +157,7 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
                     <span style="color: #e2e8f0; font-style: italic; line-height: 1.5; display: block; margin-bottom: 15px;">${dynamicForecast.guidance.transitTips}</span>
                     
                     <div style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 15px;">
-                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">⚠️ CAUTION NOTE:</strong>
+                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">⚠️ Activity of the Day !!!</strong>
                         <span style="color: #e2e8f0; line-height: 1.5; display: block;">${dynamicForecast.guidance.cautionNote}</span>
                     </div>
                 </div>
