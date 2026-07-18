@@ -1,6 +1,6 @@
 import { getBirthData } from "./birth_engine.js?v=103";
-import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=105";
-import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=105";
+import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=107";
+import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=107";
 
 let currentBirthProfile = null;
 
