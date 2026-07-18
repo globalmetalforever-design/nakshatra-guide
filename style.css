@@ -1,152 +1,15 @@
-body{
-    background:#071633;
-    color:#ffd36b;
-    font-family:Arial,sans-serif;
-    margin:0;
-}
-/* Forecast body text */
-#forecastText,
-#attentionText,
-#guidanceText,
-#historyText {
-    color: #ffffff;
-}
-.brand-header-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 0 10px 0;
-}
-/* Flex or grid mapping utilities to keep rows perfectly equal across devices */
-.dashboard-row-three-columns {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    width: 100%;
-    margin-bottom: 20px;
-    align-items: start;
+/* ==========================================================================
+   1. CORE BASE CONFIGURATION & GENERAL UTILITIES
+   ========================================================================== */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #060d1a; /* Matches deep cosmic star void background */
+    color: #ffd36b;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
 }
 
-/* Card panel designed to handle the graphic background */
-.card.branding-card-panel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    padding: 10px;
-}
-.dashboard-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-/* Row wrapper designed to align elements into 3 equal widths side-by-side */
-.dashboard-row-three-columns {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    width: 100%;
-}
-
-/* Central Graphic panel wrapper layout logic */
-.card.branding-card-panel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    padding: 15px;
-    background: rgba(10, 20, 38, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.branding-image-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Scales the graphic graphic perfectly to the boundaries of panel 2 */
-.scaled-panel-img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 6px;
-}
-
-/* Outlined card frame borders to perfectly encase layout panels */
-.card.outlined-card {
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    background: rgba(10, 20, 38, 0.3);
-}
-
-/* Enforce the exact typography metrics from Guidance to halt text spillages */
-/* Update this block inside style.css */
-.tight-forecast-text {
-    font-size: 1.05rem !important; /* Noticeably larger, highly readable contrast */
-    line-height: 1.6 !important;
-    white-space: pre-line;
-    letter-spacing: 0.2px;
-}
-
-/* Row wrapper grid alignment layout */
-.dashboard-row-three-columns {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    width: 100%;
-}
-/* Ensure the second row layout explicitly honors the panel grid */
-#forecastAndAttentionPanels {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 20px !important;
-    width: 100%;
-}
-
-/* Responsive Overrides for Mobile Screens */
-@media screen and (max-width: 1024px) {
-    .dashboard-row-three-columns,
-    #forecastAndAttentionPanels {
-        grid-template-columns: 1fr !important; /* Stacks cleanly only on small mobile layouts */
-        gap: 15px !important;
-    }
-.branding-card-panel {
-    padding: 0 !important; /* Removes margins around the banner edge */
-    overflow: hidden;
-    display: flex;
-    align-items: stretch;
-}
-
-.branding-image-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-}
-
-.scaled-panel-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Stretches and scales flawlessly across the viewport area */
-    display: block;
-}
-
-.card.branding-card-panel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    padding: 15px;
-    background: rgba(10, 20, 38, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-/* Position the star canvas layer firmly behind all user interface elements */
 #starfield-bg {
     position: fixed !important;
     top: 0 !important;
@@ -157,58 +20,104 @@ body{
     pointer-events: none !important;
 }
 
-/* 2. CONTROL THE INNER CONTENT TYPOGRAPHY PRECISELY */
-#forecastBox, 
-#forecastBox * {
-    color: #e2e8f0 !important; /* Premium off-white tone for maximum readability */
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px 20px 20px 20px;
+    box-sizing: border-box;
 }
 
-/* Ensure our explicit white inline styles stay white */
-#forecastBox strong {
+.golden-dashboard-divider {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(202,164,55,0) 0%, rgba(202,164,55,0.6) 50%, rgba(202,164,55,0) 100%);
+    margin: 20px 0;
+}
+
+/* ==========================================================================
+   2. PREMIUM UI GLASS-MORPHISM COMPONENTS
+   ========================================================================== */
+.card {
+    background: rgba(10, 20, 38, 0.65) !important; 
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 215, 0, 0.15) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 
+                inset 0 0 10px rgba(255, 255, 255, 0.02) !important;
+    transition: all 0.3s ease-in-out !important;
+    padding: 15px;
+    box-sizing: border-box;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Premium Gold Gradient Accent for Dynamic and Text Headers */
+.card h2, .card h3, .card-header, #forecastAndAttentionPanels h3, .panel h2, .panel h3 {
+    background: linear-gradient(135deg, #ffffff 30%, #ffd700 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+/* Typography Defaults inside Cards */
+.card-body, #forecastBox, #attentionBox, .scrollable-content {
+    color: #ffffff;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.card-body label, .form-group label {
     color: #ffffff !important;
     font-weight: bold !important;
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 5px;
 }
 
-/* 3. TIGHTEN SPACING TO REDUCE SCROLLING HOLES */
-.dashboard-container,
-.main-content-wrapper {
-    margin-top: 0 !important;
-    padding-top: 10px !important;
-}
-/* Make card headers clean, crisp bold white */
-.card h2, .card h3, .card-header, #forecastAndAttentionPanels h3 {
+/* Forcing crisp scannable white highlights on dynamic content metrics */
+#forecastBox strong, 
+#forecastBox span.forecast-tag-highlight,
+#forecastBox strong[style*="color: #ffffff"],
+#guidanceBox strong,
+#guidanceBox b {
     color: #ffffff !important;
     font-weight: bold !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
-/* Ensure sub-labels inside panels stand out with white text where necessary */
-.card-body label,
-.form-group label {
-    color: #ffffff !important;
-    font-weight: bold !important;
+/* Highlight Text Values */
+.highlight-text, #detectedNakshatra {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffd36b;
+    margin-top: 10px;
 }
 
-/* Make forecast block category keywords bold white for scannability */
-.forecast-tag-highlight {
-    color: #ffffff !important;
-    font-weight: bold !important;
-    display: inline !important;
-}
-/* Ensure the main document body container handles transparency over the canvas */
-body {
-    margin: 0;
-    padding: 0;
-    background-color: #060d1a; /* Matches the star void */
-    font-family: inherit;
-    min-height: 100vh;
+.sub-highlight-text, #detectedPada {
+    font-size: 20px;
+    color: #ffffff;
+    margin-top: 5px;
 }
 
-/* Turn background cards slightly translucent so the star clusters peek through elegantly */
-.card.outlined-card, .card.branding-card-panel {
-    background: rgba(10, 20, 38, 0.65) !important; /* Semi-transparent cosmic blue backing */
-    backdrop-filter: blur(4px); /* Softly blurs the stars behind cards for supreme readability */
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+/* ==========================================================================
+   3. BRANDING HEADER PANEL STYLING
+   ========================================================================== */
+.card.branding-card-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 15px;
 }
+
 .branding-image-container {
     width: 100%;
     height: 100%;
@@ -226,374 +135,50 @@ body {
     border-radius: 6px;
 }
 
-/* Enforces readable text heights inside Row 2 */
-.scrollable-content {
-    max-height: 380px;
-    overflow-y: auto;
-    font-size: 0.92rem;
-    line-height: 1.6;
-}
-
-.guidance-metric-item {
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.strategic-focus-item {
-    margin-top: 12px;
-    padding-top: 8px;
-}
-
-#dailyAction {
-    color: #ffcc00;
-    margin-top: 4px;
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-.branding-image-container {
+/* ==========================================================================
+   4. INPUT FIELD COMPONENTS & INTERFACE BUTTONS
+   ========================================================================== */
+input[type="text"], input[type="time"], select {
     width: 100%;
-    height: 100%;
+    padding: 12px;
+    border-radius: 6px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+    box-sizing: border-box;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus, input[type="time"]:focus, select:focus {
+    border-color: rgba(255, 215, 0, 0.6) !important;
+}
+
+button, .btn {
+    margin-top: 15px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #caa437;
+    color: #060d1a;
+    font-weight: bold;
+    transition: background 0.2s ease;
+}
+
+button:hover, .btn:hover {
+    background: #e5bd44;
+}
+
+.action-buttons-group, .action-row {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    gap: 10px;
 }
 
-/* Forces the graphic asset to fill its container panel seamlessly without overflowing */
-.scaled-panel-img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 4px;
-}
-
-/* Keeps dashboard text blocks neat inside Row 2 */
-.scrollable-content {
-    max-height: 380px;
-    overflow-y: auto;
-    font-size: 0.92rem;
-    line-height: 1.5;
-}
-.brand-header-img {
-    max-width: 550px; /* Perfectly limits size for premium desktop and mobile views */
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
-    transition: transform 0.3s ease;
-}
-
-/* Subtle hover interaction to make the branding feel reactive */
-.brand-header-img:hover {
-    transform: scale(1.02);
-}
-/* If paragraphs are used inside the cards */
-.forecast-card p,
-.guidance-card p,
-.attention-card p,
-.history-card p {
-    color: #ffffff;
-}
-.container{
-    width:90%;
-    max-width:1400px;
-    margin:auto;
-    padding:20px;
-}
-
-h1{
-    text-align:center;
-}
-
-.top-panels{
-    display:grid;
-    grid-template-columns:70% 28%;
-    gap:20px;
-}
-.profile-verify-text {
-    font-size: 0.8rem;
-    font-style: italic;
-    opacity: 0.75;
-    margin-top: 4px;
-    line-height: 1.2;
-    display: block;
-}
-.birth-panel{
-    display:flex;
-flex-direction:column;
-}
-.nakshatra-panel{
-display:flex;
-flex-direction:column;
-justify-content:flex-start;
-}
-.top-section{
-    display:flex;
-    gap:10px;
-    align-items:stretch;
-}
-.row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
-    margin-top:20px;
-}
-
-.panel{
-    background:#12254f;
-    border:1px solid #caa437;
-    border-radius:10px;
-    padding:10px;
-    margin-bottom:20px;
-}
-
-label{
-    display:block;
-    margin-top:15px;
-    margin-bottom:5px;
-}
-
-input,
-select{
-    width:100%;
-    padding:12px;
-    border-radius:6px;
-    border:1px solid #caa437;
-    background:#0f2045;
-    color:white;
-    box-sizing:border-box;
-}
-
-.time-row{
-    display:grid;
-    grid-template-columns:2fr 1fr;
-    gap:10px;
-}
-
-button{
-    margin-top:20px;
-    padding:12px 25px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    background:#caa437;
-    color:#071633;
-    font-weight:bold;
-}
-
-.action-row{
-    display:flex;
-    gap:10px;
-}
-
-#detectedNakshatra{
-    font-size:32px;
-    font-weight:bold;
-    margin-top:20px;
-}
-
-#detectedPada{
-    font-size:22px;
-    margin-top:10px;
-}
-
-@media(max-width:768px){
-
-    .top-panels{
-        grid-template-columns:1fr;
-    }
-
-    .row{
-        grid-template-columns:1fr;
-    }
-
-}
-
-.error-text{
-    color:#ff8b8b;
-}
-/* ---------- Forecast Output ---------- */
-
-#forecastArea p,
-#forecastArea span {
-    color: #ffffff;
-}
-
-/* Keep headings gold */
-
-#forecastArea h2,
-#forecastArea h3 {
-    color: #ffd166;
-}
-
-/* Guidance labels */
-
-#forecastArea p {
-    color: #ffffff;
-    line-height: 1.7;
-}
-
-/* Guidance values */
-
-#luckyColor,
-#luckyNumber,
-#goodTime,
-#avoidTime,
-#dailyAction {
-    color: #ffffff;
-    font-weight: 600;
-}
-/* Forecast output */
-#forecastBox,
-#attentionBox {
-    padding-top: 8px;
-    font-size: 1.15rem;
-    color: #ffffff;
-    line-height: 2.0px;
-}
-
-/* Guidance values */
-#luckyColor,
-#luckyNumber,
-#goodTime,
-#avoidTime,
-#dailyAction {
-    color: #ffffff;
-}
-
-/* Keep headings gold */
-.panel h2,
-.panel h3 {
-    color: #ffd36b;
-}
-/* Forces the bold category tags to render as crisp white, overriding everything else */
-#forecastBox span.forecast-tag-highlight,
-#forecastBox strong[style*="color: #ffffff"] {
-    color: #ffffff !important;
-    font-weight: bold !important;
-    -webkit-text-fill-color: #ffffff !important; /* Forces Safari/Chrome layout engines to comply */
-}
-/* Target only the text labels inside the Today's Guidance panel */
-#guidanceBox,
-#guidanceBox *,
-#guidancePanelContainer * {
-    color: #ffffff !important;
-}
-
-/* Ensure the bold category headers inside Guidance stand out cleanly in crisp white */
-#guidanceBox strong,
-#guidanceBox b {
-    color: #ffffff !important;
-    font-weight: bold !important;
-}
-/* ==========================================
-   MOBILE RESPONSIVE MEDIA QUERY UPGRADE 
-   ========================================== */
-@media screen and (max-width: 768px) {
-    .card {
-        height: auto !important; 
-        min-height: unset !important;
-        display: block !important;
-        margin-bottom: 16px !important;
-    }
-    .card-body {
-        display: block !important;
-        height: auto !important;
-    }
-}
-
-/* Clear vertical shifts inside sub navigation segments */
-#mobile-navigation-bar::-webkit-scrollbar {
-    display: none;
-}
-    /* Force the project layout wrapper container to drop padding margins gently */
-    .dashboard-container {
-        padding: 10px;
-    }
-
-    /* Remap the three column row grids to fall down into a stack of 1 full-width column */
-    .dashboard-row-three-columns {
-        grid-template-columns: 1fr !important; /* Forces single panel flow one below another */
-        gap: 15px; /* Pulls panels slightly closer for tight mobile tracking */
-    }
-
-    /* Force the logo graphics block to behave natively under tight screen widths */
-    .card.branding-card-panel {
-        max-height: 220px; /* Limits graphic height so the user doesn't have to scroll infinitely */
-        padding: 10px;
-    }
-
-    /* Allow mobile scrollable content containers to expand naturally or manage heights securely */
-    .scrollable-content {
-        max-height: none !important; /* Prevents awkward double-scrollbar behavior on mobile views */
-    }
-
-    /* Optional: Make text input fields stretch cleanly for easy thumb-tapping access */
-    input[type="date"], input[type="time"], input[type="text"], .btn {
-        width: 100% !important;
-        box-sizing: border-box;
-    }
-}
-/* Custom spacing layout optimization rules */
-@media (min-width: 769px) {
-    #forecastAndAttentionPanels {
-        gap: 24px !important;
-    }
-}
-
-/* Hide navigation bar adjustments indicator on desktop */
-@media (min-width: 769px) {
-    #mobile-navigation-bar {
-        display: none !important;
-    }
-}
-
-/* Remove horizontal scrollbar visuals on custom container tabs for mobile viewports */
-#mobile-navigation-bar::-webkit-scrollbar {
-    display: none;
-}
-/* Ensure panels utilization spans cleanly across full width monitor layouts */
-@media (min-width: 769px) {
-    #forecastAndAttentionPanels {
-        display: grid !important;
-        width: 100% !important;
-        max-width: 95% !important; 
-        margin: 30px auto !important;
-    }
-    
-    .card {
-        height: 100% !important;
-        min-height: 350px;
-    }
-}
-/* --- 4 equal panels dashboard grid layout --- */
-@media (min-width: 769px) {
-    #forecastAndAttentionPanels {
-        display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
-        width: 100% !important;
-        max-width: 98% !important; 
-        margin: 30px auto !important;
-        gap: 20px !important;
-    }
-    
-    .card {
-        height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-    
-    .card-body {
-        flex: 1 !important;
-    }
-}
-
-/* Clear vertical shifts inside sub navigation segments */
-#mobile-navigation-bar::-webkit-scrollbar {
-    display: none;
-}
-/* FORCE FORECAST PARAGRAPHS TO WRAP NATURALLY ON MOBILE SCREENS */
+/* ==========================================================================
+   5. SPECIFIC TEXT CONTAINER BLOCK WRAPPERS
+   ========================================================================== */
 #forecastBox, #forecastBox * {
     display: block !important;
     white-space: normal !important;
@@ -608,4 +193,86 @@ button{
     display: block !important;
     content: "" !important;
     margin-top: 12px !important;
+}
+
+/* ==========================================================================
+   6. WIDESCREEN DESKTOP ENVIRONMENT LAYOUT RULES
+   ========================================================================== */
+@media screen and (min-width: 769px) {
+    /* Top row configuration profiles */
+    .dashboard-row-three-columns {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        width: 100%;
+        margin-bottom: 20px;
+        align-items: start;
+    }
+
+    /* 4-Column Equidistant Bottom Row Config */
+    #forecastAndAttentionPanels {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 20px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 20px !important;
+    }
+    
+    /* Strict height leveling mechanics strictly for desktop grids */
+    #forecastAndAttentionPanels .card {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    #forecastAndAttentionPanels .card-body {
+        flex: 1 !important;
+    }
+
+    #mobile-navigation-bar {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   7. TOUCH-DRIVEN MOBILE ENVIRONMENT LAYOUT RULES
+   ========================================================================== */
+@media screen and (max-width: 768px) {
+    .dashboard-container {
+        padding: 10px;
+    }
+
+    /* Stacks top panel row forms vertically */
+    .dashboard-row-three-columns {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    /* Suppresses desktop grid configuration to enable script-driven page switching */
+    #forecastAndAttentionPanels {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    /* Natural block sizing prevents accordion collapses or layout compression holes */
+    .card {
+        height: auto !important; 
+        min-height: unset !important;
+        display: block;
+        margin-bottom: 16px !important;
+    }
+    
+    .card-body {
+        height: auto !important;
+    }
+
+    /* Hides the default layout scrollbar wrappers on mobile submenu bar */
+    #mobile-navigation-bar::-webkit-scrollbar {
+        display: none !important;
+    }
+    #mobile-navigation-bar {
+        scrollbar-width: none !important;
+    }
 }
