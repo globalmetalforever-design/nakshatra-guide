@@ -519,3 +519,61 @@ button{
         box-sizing: border-box;
     }
 }
+/* Custom spacing layout optimization rules */
+@media (min-width: 769px) {
+    #forecastAndAttentionPanels {
+        gap: 24px !important;
+    }
+}
+
+/* Hide navigation bar adjustments indicator on desktop */
+@media (min-width: 769px) {
+    #mobile-navigation-bar {
+        display: none !important;
+    }
+}
+
+/* Remove horizontal scrollbar visuals on custom container tabs for mobile viewports */
+#mobile-navigation-bar::-webkit-scrollbar {
+    display: none;
+}
+/* Ensure panels utilization spans cleanly across full width monitor layouts */
+@media (min-width: 769px) {
+    #forecastAndAttentionPanels {
+        display: grid !important;
+        width: 100% !important;
+        max-width: 95% !important; 
+        margin: 30px auto !important;
+    }
+    
+    .card {
+        height: 100% !important;
+        min-height: 350px;
+    }
+}
+/* --- 4 equal panels dashboard grid layout --- */
+@media (min-width: 769px) {
+    #forecastAndAttentionPanels {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        width: 100% !important;
+        max-width: 98% !important; 
+        margin: 30px auto !important;
+        gap: 20px !important;
+    }
+    
+    .card {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    .card-body {
+        flex: 1 !important;
+    }
+}
+
+/* Clear vertical shifts inside sub navigation segments */
+#mobile-navigation-bar::-webkit-scrollbar {
+    display: none;
+}

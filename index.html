@@ -66,38 +66,55 @@
 
         <hr class="golden-dashboard-divider">
 
-        <div id="forecastAndAttentionPanels" class="dashboard-row-three-columns" style="display: none; margin-top: 20px;">
+        <!-- Mobile-Only Swapping Header Submenu -->
+        <div id="mobile-navigation-bar" style="display: none; overflow-x: auto; white-space: nowrap; padding: 10px 5px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; -webkit-overflow-scrolling: touch;">
+            <button class="nav-tab" onclick="switchMobileTab('forecast')" style="background: none; border: none; color: #ffffff; padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer; font-weight: bold;">Forecast</button>
+            <button class="nav-tab" onclick="switchMobileTab('tips')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">Transit Tips</button>
+            <button class="nav-tab" onclick="switchMobileTab('important')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">Important</button>
+            <button class="nav-tab" onclick="switchMobileTab('history')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">History</button>
+        </div>
+
+        <!-- 4 Equal Panels Container Grid Grid Engine -->
+        <div id="forecastAndAttentionPanels" style="display: none; margin-top: 20px;">
             
-            <div class="card outlined-card">
-                <div class="card-header">Daily Forecast</div>
-                <div id="forecastBox" class="card-body scrollable-content tight-forecast-text">
-                    Calculating coordinates...
+            <!-- Panel 1: Daily Forecast -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Daily Forecast</h3>
                 </div>
-            </div>
-
-            <div class="card outlined-card">
-                <div class="card-header">Today's Guidance</div>
                 <div class="card-body">
-                    <div class="guidance-metrics-list">
-                        <div class="guidance-metric-item"><strong>Lucky Color:</strong> <span id="luckyColor">-</span></div>
-                        <div class="guidance-metric-item"><strong>Lucky Number:</strong> <span id="luckyNumber">-</span></div>
-                        <div class="guidance-metric-item"><strong>Favorable time:</strong> <span id="goodTime">-</span></div>
-                        <div class="guidance-metric-item"><strong>Unfavorable time:</strong> <span id="badTime">-</span></div>
-                        
-                        <div class="strategic-focus-item">
-                            <strong>Strategic Focus:</strong>
-                            <div id="dailyAction">-</div>
-                        </div>
-                    </div>
+                    <div id="forecastBox">Calculating coordinates...</div>
                 </div>
             </div>
 
-            <div class="card outlined-card">
-                <div class="card-header">History</div>
-                <div id="attentionBox" class="card-body scrollable-content">
-                    </div>
+            <!-- Panel 2: Dynamic Transit Tips & Caution Note -->
+            <div class="card" id="mobile-tips-card">
+                <!-- Data dynamically inserted here by index_app.js -->
             </div>
 
+            <!-- Panel 3: Important Guide -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Important Guide</h3>
+                </div>
+                <div class="card-body">
+                    <strong>Lucky Color:</strong> <span id="luckyColor">-</span><br>
+                    <strong>Lucky Number:</strong> <span id="luckyNumber">-</span><br>
+                    <strong>Favorable time:</strong> <span id="goodTime">-</span><br>
+                    <strong>Unfavorable time:</strong> <span id="badTime">-</span>
+                </div>
+            </div>
+
+            <!-- Panel 4: History Snapshot Lookup -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>History</h3>
+                </div>
+                <div class="card-body">
+                    <div id="attentionBox"></div>
+                </div>
+            </div>
+            
         </div>
 
     </div>
