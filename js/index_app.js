@@ -1,9 +1,21 @@
 import { getBirthData } from "./birth_engine.js?v=103";
-import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=103";
-import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=103";
+import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=105";
+import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=105";
 
 let currentBirthProfile = null;
-
+// Force the starfield canvas completely out of the layout flow on launch
+document.addEventListener("DOMContentLoaded", () => {
+    const bgCanvas = document.getElementById("starfield-bg");
+    if (bgCanvas) {
+        bgCanvas.style.position = "fixed";
+        bgCanvas.style.top = "0";
+        bgCanvas.style.left = "0";
+        bgCanvas.style.width = "100vw";
+        bgCanvas.style.height = "100vh";
+        bgCanvas.style.zIndex = "-9999";
+        bgCanvas.style.pointerEvents = "none";
+    }
+});
 function updateHistoryCardHeader() {
     const historyBox = document.getElementById("attentionBox");
     if (!historyBox) return;
@@ -96,7 +108,14 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
         const forecastBox = document.getElementById("forecastBox");
         
         if (forecastBox) {
-            forecastBox.innerHTML = dynamicForecast.forecast.split('\n').join('<br>');
+            forecastBox.style.setProperty("color", "#e2e8f0", "important");
+            forecastBox.innerHTML = dynamicForecast.forecast;
+            
+            const strongTags = forecastBox.querySelectorAll("strong");
+            strongTags.forEach(tag => {
+                tag.style.setProperty("color", "#ffffff", "important");
+                tag.style.setProperty("font-weight", "bold", "important");
+            });
         }
 
         const activeDateBox = document.getElementById("activeForecastDateDisplay");
@@ -135,11 +154,31 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             });
         }
 
+        // Map individual guidance metrics cleanly
         if (document.getElementById("luckyColor")) document.getElementById("luckyColor").innerText = dynamicForecast.guidance.luckyColor;
         if (document.getElementById("luckyNumber")) document.getElementById("luckyNumber").innerText = dynamicForecast.guidance.luckyNumber;
         if (document.getElementById("goodTime")) document.getElementById("goodTime").innerText = dynamicForecast.guidance.goodTime;
         if (document.getElementById("badTime")) document.getElementById("badTime").innerText = dynamicForecast.guidance.badTime;
-        if (document.getElementById("dailyAction")) document.getElementById("dailyAction").innerText = dynamicForecast.guidance.action;
+        
+        const actionElement = document.getElementById("dailyAction");
+        if (actionElement) {
+            // 1. Render the base Strategic Focus text
+            actionElement.innerText = dynamicForecast.guidance.action;
+
+            // 2. Clear any old Upaya rows to prevent duplication on view refreshes
+            const existingUpaya = document.getElementById("dynamic-upaya-row");
+            if (existingUpaya) existingUpaya.remove();
+
+            // 3. Dynamically insert the Actionable Upaya element block right underneath
+            const upayaWrapper = document.createElement("div");
+            upayaWrapper.id = "dynamic-upaya-row";
+            upayaWrapper.style.cssText = "border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 12px; margin-top: 12px;";
+            upayaWrapper.innerHTML = `
+                <strong style="color: #ffffff !important; font-weight: bold !important; display: block; margin-bottom: 4px;">🧘 DAILY ALIGNMENT STRATEGY:</strong>
+                <span style="color: #ffffff !important; display: block; font-size: 0.95rem; line-height: 1.5;">${dynamicForecast.guidance.dailyUpaya || 'Maintain standard alignments.'}</span>
+            `;
+            actionElement.parentElement.appendChild(upayaWrapper);
+        }
 
     } catch (error) {
         console.error("Dashboard render failed:", error);
