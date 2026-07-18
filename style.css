@@ -24,6 +24,8 @@ body{
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     width: 100%;
+    margin-bottom: 20px;
+    align-items: start;
 }
 
 /* Card panel designed to handle the graphic background */
@@ -85,10 +87,12 @@ body{
 }
 
 /* Enforce the exact typography metrics from Guidance to halt text spillages */
+/* Update this block inside style.css */
 .tight-forecast-text {
-    font-size: 0.85rem !important; /* Scaled down perfectly to match guidance typography */
-    line-height: 1.4 !important;
+    font-size: 1.05rem !important; /* Noticeably larger, highly readable contrast */
+    line-height: 1.6 !important;
     white-space: pre-line;
+    letter-spacing: 0.2px;
 }
 
 /* Row wrapper grid alignment layout */
@@ -97,6 +101,40 @@ body{
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     width: 100%;
+}
+/* Ensure the second row layout explicitly honors the panel grid */
+#forecastAndAttentionPanels {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    width: 100%;
+}
+
+/* Responsive Overrides for Mobile Screens */
+@media screen and (max-width: 1024px) {
+    .dashboard-row-three-columns,
+    #forecastAndAttentionPanels {
+        grid-template-columns: 1fr !important; /* Stacks cleanly only on small mobile layouts */
+        gap: 15px !important;
+    }
+.branding-card-panel {
+    padding: 0 !important; /* Removes margins around the banner edge */
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+}
+
+.branding-image-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.scaled-panel-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Stretches and scales flawlessly across the viewport area */
+    display: block;
 }
 
 .card.branding-card-panel {
@@ -110,15 +148,52 @@ body{
 }
 /* Position the star canvas layer firmly behind all user interface elements */
 #starfield-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1; /* Pushes it fully into the absolute back layer */
-    pointer-events: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: -9999 !important;
+    pointer-events: none !important;
 }
 
+/* 2. CONTROL THE INNER CONTENT TYPOGRAPHY PRECISELY */
+#forecastBox, 
+#forecastBox * {
+    color: #e2e8f0 !important; /* Premium off-white tone for maximum readability */
+}
+
+/* Ensure our explicit white inline styles stay white */
+#forecastBox strong {
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* 3. TIGHTEN SPACING TO REDUCE SCROLLING HOLES */
+.dashboard-container,
+.main-content-wrapper {
+    margin-top: 0 !important;
+    padding-top: 10px !important;
+}
+/* Make card headers clean, crisp bold white */
+.card h2, .card h3, .card-header, #forecastAndAttentionPanels h3 {
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* Ensure sub-labels inside panels stand out with white text where necessary */
+.card-body label,
+.form-group label {
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* Make forecast block category keywords bold white for scannability */
+.forecast-tag-highlight {
+    color: #ffffff !important;
+    font-weight: bold !important;
+    display: inline !important;
+}
 /* Ensure the main document body container handles transparency over the canvas */
 body {
     margin: 0;
@@ -391,6 +466,26 @@ button{
 .panel h2,
 .panel h3 {
     color: #ffd36b;
+}
+/* Forces the bold category tags to render as crisp white, overriding everything else */
+#forecastBox span.forecast-tag-highlight,
+#forecastBox strong[style*="color: #ffffff"] {
+    color: #ffffff !important;
+    font-weight: bold !important;
+    -webkit-text-fill-color: #ffffff !important; /* Forces Safari/Chrome layout engines to comply */
+}
+/* Target only the text labels inside the Today's Guidance panel */
+#guidanceBox,
+#guidanceBox *,
+#guidancePanelContainer * {
+    color: #ffffff !important;
+}
+
+/* Ensure the bold category headers inside Guidance stand out cleanly in crisp white */
+#guidanceBox strong,
+#guidanceBox b {
+    color: #ffffff !important;
+    font-weight: bold !important;
 }
 /* ==========================================
    MOBILE RESPONSIVE MEDIA QUERY UPGRADE 
