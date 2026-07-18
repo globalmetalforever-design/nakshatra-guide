@@ -103,15 +103,17 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     const familyText = PHRASE_BANK.family[phraseSelectorIndex % PHRASE_BANK.family.length];
 
     // --- STRENGTHS, CAUTIONS & REMEDIES ---
+    // --- STRENGTHS & CAUTIONS ---
+    // --- STRENGTHS & CAUTIONS ---
     let strengthText = PHRASE_BANK.strengths[phraseSelectorIndex % PHRASE_BANK.strengths.length];
     
     let cautionText = PHRASE_BANK.caution[phraseSelectorIndex % PHRASE_BANK.caution.length];
     if ([12, 1, 2, 8].includes(houseMap.saturn)) {
         cautionText = "Systemic delays or auditing bottlenecks demand strict validation. Review critical data before making decisions.";
     }
-       let alertHeader = "";
-    
-   if (isWesternAspectTense) {
+
+    // DYNAMIC TRANSIT WARNING INJECTION
+    if (isWesternAspectTense) {
         cautionText = `${PHRASE_BANK.alerts.marsSunFriction} Moreover, ${cautionText.toLowerCase()}`;
     } else if ([12, 1, 2].includes(houseMap.saturn)) {
         cautionText = `${PHRASE_BANK.alerts.saturnSadeSati} Crucially, ${cautionText.toLowerCase()}`;
@@ -119,19 +121,33 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
         cautionText = `${PHRASE_BANK.alerts.moonStagnation} Additionally, ${cautionText.toLowerCase()}`;
     }
 
-    // Pull the clean Lal Kitab daily Upaya alignment action string
-    const remedyText = PHRASE_BANK.spirituality[phraseSelectorIndex % PHRASE_BANK.spirituality.length];
-    
-    // Pass remedyText into the guidance metrics engine block below
-    const guidanceMetrics = addonComputeGuidance(birthProfile.nakshatra.number, transitNakshatraIndex, careerTier, financeTier, remedyText);
+      // Determine target texts for transit statuses
+    const activeTransitStatus = isWesternAspectTense ? "Risk Alert" : ([12, 1, 2].includes(houseMap.saturn) ? "Saturn Audit" : "Clear");
+    const activeTransitTips = isWesternAspectTense 
+        ? "Avoid signing guarantees, legal commitments, or loaning funds. Volatility is running high; buy 48 hours before locking financial moves."
+        : ([12, 1, 2].includes(houseMap.saturn) 
+            ? "Expect administrative bottlenecks or timeline adjustments. Double-check structural records and audit metrics before submitting."
+            : "Cosmic weather is uninhibited. Proceed with execution routines, launch key plans, and advance existing configurations smoothly.");
 
-    // Streamlined Forecast Text: UPAYA has been completely removed from this view layer string
+    // Pull the Lal Kitab daily Upaya alignment action string
+    const remedyText = PHRASE_BANK.spirituality[phraseSelectorIndex % PHRASE_BANK.spirituality.length];
+
+    // Compute all guidance metrics cleanly by passing only what's needed
+    const guidanceMetrics = addonComputeGuidance(
+        birthProfile.nakshatra.number, 
+        transitNakshatraIndex, 
+        careerTier, 
+        financeTier, 
+        activeTransitStatus, 
+        activeTransitTips, 
+        remedyText
+    );
+
+    // Formatted single-line forecast: Strictly critical pillars only
     const singleLineForecast = 
         `<strong style="color: #ffffff !important; font-weight: bold !important;">💼 CAREER:</strong> ${careerText}<br><br>` +
         `<strong style="color: #ffffff !important; font-weight: bold !important;">💰 FINANCE:</strong> ${financeText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">🌱 HEALTH:</strong> ${healthText}<br><br>` +
         `<strong style="color: #ffffff !important; font-weight: bold !important;">👨‍👩‍👧‍👦 FAMILY:</strong> ${familyText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">⚡ STRENGTH:</strong> ${strengthText}<br><br>` +
         `<strong style="color: #ffffff !important; font-weight: bold !important;">⚠️ CAUTION:</strong> ${cautionText}`;
 
     return {
@@ -140,7 +156,9 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     };
 }
 
-function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTier, financeTier, remedyText) {
+// Updated Helper Function to perfectly process and scope all dashboard outputs
+// Updated Helper Function to cleanly process outputs without any Strategic Focus remnants
+function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTier, financeTier, transitStatusText, transitTipsText, cautionNoteText) {
     const transitNakshatraNum = transitBakshatraIndex + 1;
     const distance = ((transitNakshatraNum - birthNakshatraNum + 27) % 27) + 1;
     const score = (distance % 9) || 9;
@@ -172,16 +190,13 @@ function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTi
         goodTimeStr = "08:15 AM - 10:45 AM (Sub-Lord Auspicious Peak)";
     }
 
-    const baseStrategicFocus = careerTier === "high" || financeTier === "high"
-        ? "Great day to start new tasks, submit vital work, and hold key meetings." 
-        : "Focus on organizing existing paperwork, background testing, and administrative cleanup.";
-
     return {
         luckyColor: dynamicColor,
         luckyNumber: isFavorable ? String((score * 3) % 9 || 9) : String((score * 2) % 7 || 3),
         goodTime: goodTimeStr,
         badTime: badTimeStr,
-        action: baseStrategicFocus,
-        dailyUpaya: remedyText // Appended directly as an actionable metric payload item
+        transitStatus: transitStatusText,
+        transitTips: transitTipsText,
+        cautionNote: cautionNoteText
     };
 }
