@@ -3,6 +3,7 @@ import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/j
 import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=105";
 
 let currentBirthProfile = null;
+
 // Force the starfield canvas completely out of the layout flow on launch
 document.addEventListener("DOMContentLoaded", () => {
     const bgCanvas = document.getElementById("starfield-bg");
@@ -16,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bgCanvas.style.pointerEvents = "none";
     }
 });
+
 function updateHistoryCardHeader() {
     const historyBox = document.getElementById("attentionBox");
     if (!historyBox) return;
@@ -77,24 +79,6 @@ async function loadStoredProfileAndRender() {
         if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "none";
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
         
-        const panelsContainer = document.getElementById("forecastAndAttentionPanels");
-        if (panelsContainer) {
-            panelsContainer.style.display = "grid";
-            if (window.innerWidth > 768) {
-                panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
-            } else {
-                panelsContainer.style.gridTemplateColumns = "1fr";
-            }
-            panelsContainer.style.gap = "20px";
-        }
-
-        const historyBox = document.getElementById("attentionBox");
-        if (historyBox) {
-            const historyCard = historyBox.closest('.card') || historyBox;
-            historyCard.style.display = "block";
-            updateHistoryCardHeader();
-        }
-
         await renderUserDashboard(profile, new Date());
     } catch (err) {
         console.error("Local profile engine initialization failure:", err);
@@ -138,46 +122,81 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             `;
 
             const historyInput = document.getElementById("history-manual-date");
-            
-            historyInput.addEventListener("input", (e) => {
-                let v = e.target.value.replace(/\D/g, '');
-                if (v.length > 2 && v.length <= 4) {
-                    v = `${v.slice(0, 2)}-${v.slice(2)}`;
-                } else if (v.length > 4) {
-                    v = `${v.slice(0, 2)}-${v.slice(2, 4)}-${v.slice(4, 8)}`;
-                }
-                e.target.value = v;
+            if (historyInput) {
+                historyInput.addEventListener("input", (e) => {
+                    let v = e.target.value.replace(/\D/g, '');
+                    if (v.length > 2 && v.length <= 4) {
+                        v = `${v.slice(0, 2)}-${v.slice(2)}`;
+                    } else if (v.length > 4) {
+                        v = `${v.slice(0, 2)}-${v.slice(2, 4)}-${v.slice(4, 8)}`;
+                    }
+                    e.target.value = v;
 
-                if (v.length === 10) {
-                    processManualHistoryLookup(storedBirthProfile, v);
-                }
-            });
+                    if (v.length === 10) {
+                        processManualHistoryLookup(storedBirthProfile, v);
+                    }
+                });
+            }
         }
 
-        // Map individual guidance metrics cleanly
+        // Map standard metrics cleanly into the Guide Card elements
         if (document.getElementById("luckyColor")) document.getElementById("luckyColor").innerText = dynamicForecast.guidance.luckyColor;
         if (document.getElementById("luckyNumber")) document.getElementById("luckyNumber").innerText = dynamicForecast.guidance.luckyNumber;
         if (document.getElementById("goodTime")) document.getElementById("goodTime").innerText = dynamicForecast.guidance.goodTime;
         if (document.getElementById("badTime")) document.getElementById("badTime").innerText = dynamicForecast.guidance.badTime;
-        
-        const actionElement = document.getElementById("dailyAction");
-        if (actionElement) {
-            // 1. Render the base Strategic Focus text
-            actionElement.innerText = dynamicForecast.guidance.action;
 
-            // 2. Clear any old Upaya rows to prevent duplication on view refreshes
-            const existingUpaya = document.getElementById("dynamic-upaya-row");
-            if (existingUpaya) existingUpaya.remove();
-
-            // 3. Dynamically insert the Actionable Upaya element block right underneath
-            const upayaWrapper = document.createElement("div");
-            upayaWrapper.id = "dynamic-upaya-row";
-            upayaWrapper.style.cssText = "border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 12px; margin-top: 12px;";
-            upayaWrapper.innerHTML = `
-                <strong style="color: #ffffff !important; font-weight: bold !important; display: block; margin-bottom: 4px;">🧘 DAILY ALIGNMENT STRATEGY:</strong>
-                <span style="color: #ffffff !important; display: block; font-size: 0.95rem; line-height: 1.5;">${dynamicForecast.guidance.dailyUpaya || 'Maintain standard alignments.'}</span>
+        // Manage clean internal mapping into the dedicated panel 2 card
+        let tipsCard = document.getElementById("mobile-tips-card");
+        if (tipsCard) {
+            tipsCard.innerHTML = `
+                <div class="card-header">
+                    <h3>🚨 Transit Watch: <span style="color: ${dynamicForecast.guidance.transitStatus === 'Clear' ? '#4adf8a' : '#ff6b6b'};">${dynamicForecast.guidance.transitStatus}</span></h3>
+                </div>
+                <div class="card-body">
+                    <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">Transit Tips:</strong>
+                    <span style="color: #e2e8f0; font-style: italic; line-height: 1.5; display: block; margin-bottom: 15px;">${dynamicForecast.guidance.transitTips}</span>
+                    
+                    <div style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 15px;">
+                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">⚠️ CAUTION NOTE:</strong>
+                        <span style="color: #e2e8f0; line-height: 1.5; display: block;">${dynamicForecast.guidance.cautionNote}</span>
+                    </div>
+                </div>
             `;
-            actionElement.parentElement.appendChild(upayaWrapper);
+        }
+
+        // --- RESPONSIVE SPLITTER ENGINE ---
+        const panelsContainer = document.getElementById("forecastAndAttentionPanels");
+        const mobNav = document.getElementById("mobile-navigation-bar");
+        
+        if (window.innerWidth <= 768) {
+            if (mobNav) mobNav.style.display = "block";
+            if (panelsContainer) {
+                panelsContainer.style.display = "block";
+                panelsContainer.style.gridTemplateColumns = "none";
+                panelsContainer.style.width = "100%";
+            }
+            if (typeof switchMobileTab === "function") {
+                switchMobileTab('forecast');
+            }
+        } else {
+            if (mobNav) mobNav.style.display = "none";
+            if (panelsContainer) {
+                panelsContainer.style.display = "grid";
+                panelsContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
+                panelsContainer.style.gap = "20px";
+                panelsContainer.style.width = "100%";
+                panelsContainer.style.maxWidth = "100%";
+            }
+            
+            // Explicitly force standard visibility defaults for desktop layout
+            if (forecastBox) forecastBox.closest('.card').style.display = 'block';
+            if (tipsCard) tipsCard.style.display = 'block';
+            
+            const colorEl = document.getElementById("luckyColor");
+            if (colorEl) colorEl.closest('.card').style.display = 'block';
+            
+            const attnEl = document.getElementById("attentionBox");
+            if (attnEl) attnEl.closest('.card').style.display = 'block';
         }
 
     } catch (error) {
@@ -290,11 +309,11 @@ async function handleConfirm() {
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
             if (window.innerWidth > 768) {
-                panelsContainer.style.gridTemplateColumns = "repeat(3, 1fr)";
+                panelsContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
+                panelsContainer.style.gap = "20px";
             } else {
-                panelsContainer.style.gridTemplateColumns = "1fr";
+                panelsContainer.style.display = "block";
             }
-            panelsContainer.style.gap = "20px";
         }
 
         const historyBox = document.getElementById("attentionBox"); 
@@ -421,3 +440,28 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+window.switchMobileTab = function(tabId) {
+    if (window.innerWidth > 768) return; 
+    
+    const tabs = document.querySelectorAll('.nav-tab');
+    tabs.forEach(tab => {
+        if (tab.getAttribute('onclick').includes(tabId)) {
+            tab.style.color = "#ffffff";
+            tab.style.fontWeight = "bold";
+        } else {
+            tab.style.color = "rgba(255,255,255,0.6)";
+            tab.style.fontWeight = "normal";
+        }
+    });
+
+    const forecastBox = document.getElementById("forecastBox")?.closest('.card');
+    const luckyCard = document.getElementById("luckyColor")?.closest('.card');
+    const historyCard = document.getElementById("attentionBox")?.closest('.card');
+    const tipsCard = document.getElementById("mobile-tips-card");
+
+    if (forecastBox) forecastBox.style.display = (tabId === 'forecast') ? 'block' : 'none';
+    if (luckyCard) luckyCard.style.display = (tabId === 'important') ? 'block' : 'none';
+    if (historyCard) historyCard.style.display = (tabId === 'history') ? 'block' : 'none';
+    if (tipsCard) tipsCard.style.display = (tabId === 'tips') ? 'block' : 'none';
+};
