@@ -1,22 +1,25 @@
 import { getBirthData } from "./birth_engine.js?v=103";
-import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=111";
-import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=111";
+import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=114";
+import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=114";
 
 let currentBirthProfile = null;
 
-// Built-in Indian Cities Timezone Lookup Registry for automation
-const TIMEZONE_GEO_REGISTRY = {
-    "chennai": 5.5,
-    "mumbai": 5.5,
-    "delhi": 5.5,
-    "kolkata": 5.5,
-    "bengaluru": 5.5,
-    "hyderabad": 5.5,
-    "ahmedabad": 5.5,
-    "pune": 5.5
+// Global City-to-Timezone mapping registry database matrix
+const GLOBAL_CITY_TZ_DB = {
+    // India (IST)
+    "chennai": 5.5, "mumbai": 5.5, "delhi": 5.5, "kolkata": 5.5, "bengaluru": 5.5, 
+    "hyderabad": 5.5, "ahmedabad": 5.5, "pune": 5.5, "jaipur": 5.5, "lucknow": 5.5,
+    // Southeast Asia & UAE
+    "singapore": 8.0, "dubai": 4.0, "abu dhabi": 4.0, "sharjah": 4.0,
+    // United Kingdom & Europe
+    "london": 0.0, "manchester": 0.0, "birmingham": 0.0, "paris": 1.0, "berlin": 1.0,
+    // USA & Canada major birth hubs
+    "new york": -5.0, "miami": -5.0, "boston": -5.0, "toronto": -5.0, "montreal": -5.0,
+    "chicago": -6.0, "houston": -6.0, "dallas": -6.0, "winnipeg": -6.0,
+    "denver": -7.0, "phoenix": -7.0, "calgary": -7.0,
+    "los angeles": -8.0, "san francisco": -8.0, "seattle": -8.0, "vancouver": -8.0
 };
 
-// Force the starfield canvas completely out of the layout flow on launch
 document.addEventListener("DOMContentLoaded", () => {
     const bgCanvas = document.getElementById("starfield-bg");
     if (bgCanvas) {
@@ -66,14 +69,15 @@ function restoreFormInputs(profile) {
     }
     if (document.getElementById("tob")) document.getElementById("tob").value = profile.inputs.time || "";
     if (document.getElementById("birth-place-input")) document.getElementById("birth-place-input").value = profile.inputs.place || "";
+    if (document.getElementById("country-input")) document.getElementById("country-input").value = profile.inputs.country || "";
 }
 
 function adjustMobileInitialPanelVisibility(hasStoredProfile) {
     if (window.innerWidth <= 768) {
         const panels = document.querySelectorAll('.dashboard-row-three-columns .card');
         if (panels.length >= 3) {
-            const dobPanel = panels[1]; // Center panel containing form inputs
-            const detectedPanel = panels[2]; // Right panel containing calculated results
+            const dobPanel = panels[1]; 
+            const detectedPanel = panels[2]; 
             
             if (hasStoredProfile) {
                 if (dobPanel) dobPanel.style.display = 'none';
@@ -113,12 +117,11 @@ async function loadStoredProfileAndRender() {
         if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "none";
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
         
-        // Hide the DOB input wrapper panel strictly for returning mobile users
         adjustMobileInitialPanelVisibility(true);
 
         await renderUserDashboard(profile, new Date());
     } catch (err) {
-        console.error("Local profile engine initialization failure:", err);
+        console.error("Profile auto-load failed:", err);
         localStorage.removeItem("permanentBirthProfile");
         adjustMobileInitialPanelVisibility(false);
     }
@@ -193,7 +196,7 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
                     <span style="color: #e2e8f0; font-style: italic; line-height: 1.5; display: block; margin-bottom: 15px;">${dynamicForecast.guidance.transitTips}</span>
                     
                     <div style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 15px;">
-                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">🎯 ACTVITIY OF THE DAY:</strong>
+                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">🎯 ACTIVITY OF THE DAY:</strong>
                         <span style="color: #e2e8f0; line-height: 1.5; display: block;">${dynamicForecast.guidance.cautionNote}</span>
                     </div>
                 </div>
@@ -247,7 +250,7 @@ async function processManualHistoryLookup(profile, formattedDateString) {
     try {
         const [dd, mm, yyyy] = formattedDateString.split("-").map(Number);
         if (isNaN(dd) || isNaN(mm) || isNaN(yyyy) || mm < 1 || mm > 12 || dd < 1 || dd > 31) {
-            resultBox.innerText = "Invalid date values entered. Please confirm format matches DD-MM-YYYY.";
+            resultBox.innerText = "Invalid date format. Confirm format matches DD-MM-YYYY.";
             return;
         }
 
@@ -266,6 +269,7 @@ async function handleSubmit() {
     const dobInput = document.getElementById("dob").value; 
     const tobValue = document.getElementById("tob").value; 
     const placeValue = document.getElementById("birth-place-input")?.value || ""; 
+    const countryValue = document.getElementById("country-input")?.value || ""; 
 
     try {
         if (!dobInput || dobInput.length < 10) throw new Error("Please enter a valid Date of Birth (DD-MM-YYYY).");
@@ -278,11 +282,12 @@ async function handleSubmit() {
 
         const [hour, minute] = tobValue.split(":").map(Number);
 
-        // --- AUTOMATED TIMEZONE LOOKUP ---
-        let resolvedTimezone = -(new Date().getTimezoneOffset() / 60); 
+        // --- AUTOMATIC TIMEZONE LOOKUP MATRIX ---
+        let resolvedTimezone = -(new Date().getTimezoneOffset() / 60); // Dynamic client fallback baseline
         const normalizedCity = placeValue.trim().toLowerCase();
-        if (TIMEZONE_GEO_REGISTRY[normalizedCity] !== undefined) {
-            resolvedTimezone = TIMEZONE_GEO_REGISTRY[normalizedCity];
+        
+        if (GLOBAL_CITY_TZ_DB[normalizedCity] !== undefined) {
+            resolvedTimezone = GLOBAL_CITY_TZ_DB[normalizedCity];
         }
 
         const inputPayload = {
@@ -296,6 +301,7 @@ async function handleSubmit() {
             date: dobInput, 
             time: tobValue, 
             place: placeValue,
+            country: countryValue,
             year, month, day, hour, minute,
             timezone: resolvedTimezone
         };
@@ -344,7 +350,6 @@ async function handleConfirm() {
             updateHistoryCardHeader();
         }
 
-        // Apply clean mobile panel toggle adjustments instantly on submission save
         adjustMobileInitialPanelVisibility(true);
 
         await renderUserDashboard(currentBirthProfile, new Date());
