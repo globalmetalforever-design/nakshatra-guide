@@ -1,8 +1,20 @@
 import { getBirthData } from "./birth_engine.js?v=103";
-import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=107";
-import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=107";
+import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=111";
+import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=111";
 
 let currentBirthProfile = null;
+
+// Built-in Indian Cities Timezone Lookup Registry for automation
+const TIMEZONE_GEO_REGISTRY = {
+    "chennai": 5.5,
+    "mumbai": 5.5,
+    "delhi": 5.5,
+    "kolkata": 5.5,
+    "bengaluru": 5.5,
+    "hyderabad": 5.5,
+    "ahmedabad": 5.5,
+    "pune": 5.5
+};
 
 // Force the starfield canvas completely out of the layout flow on launch
 document.addEventListener("DOMContentLoaded", () => {
@@ -56,16 +68,38 @@ function restoreFormInputs(profile) {
     if (document.getElementById("birth-place-input")) document.getElementById("birth-place-input").value = profile.inputs.place || "";
 }
 
+function adjustMobileInitialPanelVisibility(hasStoredProfile) {
+    if (window.innerWidth <= 768) {
+        const panels = document.querySelectorAll('.dashboard-row-three-columns .card');
+        if (panels.length >= 3) {
+            const dobPanel = panels[1]; // Center panel containing form inputs
+            const detectedPanel = panels[2]; // Right panel containing calculated results
+            
+            if (hasStoredProfile) {
+                if (dobPanel) dobPanel.style.display = 'none';
+                if (detectedPanel) detectedPanel.style.display = 'block';
+            } else {
+                if (dobPanel) dobPanel.style.display = 'block';
+                if (detectedPanel) detectedPanel.style.display = 'block';
+            }
+        }
+    }
+}
+
 async function loadStoredProfileAndRender() {
     try {
         const storedData = localStorage.getItem("permanentBirthProfile");
-        if (!storedData) return;
+        if (!storedData) {
+            adjustMobileInitialPanelVisibility(false);
+            return;
+        }
 
         const profile = JSON.parse(storedData);
         currentBirthProfile = profile;
 
         if (!profile.nakshatra || (profile.hour === undefined && profile.birthHour === undefined && profile.inputs?.hour === undefined)) {
             localStorage.removeItem("permanentBirthProfile");
+            adjustMobileInitialPanelVisibility(false);
             return;
         }
 
@@ -79,10 +113,14 @@ async function loadStoredProfileAndRender() {
         if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "none";
         if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
         
+        // Hide the DOB input wrapper panel strictly for returning mobile users
+        adjustMobileInitialPanelVisibility(true);
+
         await renderUserDashboard(profile, new Date());
     } catch (err) {
         console.error("Local profile engine initialization failure:", err);
         localStorage.removeItem("permanentBirthProfile");
+        adjustMobileInitialPanelVisibility(false);
     }
 }
 
@@ -139,13 +177,11 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             }
         }
 
-        // Map standard metrics cleanly into the Guide Card elements
         if (document.getElementById("luckyColor")) document.getElementById("luckyColor").innerText = dynamicForecast.guidance.luckyColor;
         if (document.getElementById("luckyNumber")) document.getElementById("luckyNumber").innerText = dynamicForecast.guidance.luckyNumber;
         if (document.getElementById("goodTime")) document.getElementById("goodTime").innerText = dynamicForecast.guidance.goodTime;
         if (document.getElementById("badTime")) document.getElementById("badTime").innerText = dynamicForecast.guidance.badTime;
 
-        // Manage clean internal mapping into the dedicated panel 2 card
         let tipsCard = document.getElementById("mobile-tips-card");
         if (tipsCard) {
             tipsCard.innerHTML = `
@@ -157,14 +193,13 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
                     <span style="color: #e2e8f0; font-style: italic; line-height: 1.5; display: block; margin-bottom: 15px;">${dynamicForecast.guidance.transitTips}</span>
                     
                     <div style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 15px;">
-                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">⚠️ Activity of the Day !!!</strong>
+                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">🎯 ACTVITIY OF THE DAY:</strong>
                         <span style="color: #e2e8f0; line-height: 1.5; display: block;">${dynamicForecast.guidance.cautionNote}</span>
                     </div>
                 </div>
             `;
         }
 
-        // --- RESPONSIVE SPLITTER ENGINE ---
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         const mobNav = document.getElementById("mobile-navigation-bar");
         
@@ -188,15 +223,14 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
                 panelsContainer.style.maxWidth = "100%";
             }
             
-            // Explicitly force standard visibility defaults for desktop layout
-            if (forecastBox) forecastBox.closest('.card').style.display = 'block';
+            const cForecast = document.getElementById("card-forecast");
+            const cImportant = document.getElementById("card-important");
+            const cHistory = document.getElementById("card-history");
+
+            if (cForecast) cForecast.style.display = 'block';
             if (tipsCard) tipsCard.style.display = 'block';
-            
-            const colorEl = document.getElementById("luckyColor");
-            if (colorEl) colorEl.closest('.card').style.display = 'block';
-            
-            const attnEl = document.getElementById("attentionBox");
-            if (attnEl) attnEl.closest('.card').style.display = 'block';
+            if (cImportant) cImportant.style.display = 'block';
+            if (cHistory) cHistory.style.display = 'block';
         }
 
     } catch (error) {
@@ -244,9 +278,16 @@ async function handleSubmit() {
 
         const [hour, minute] = tobValue.split(":").map(Number);
 
+        // --- AUTOMATED TIMEZONE LOOKUP ---
+        let resolvedTimezone = -(new Date().getTimezoneOffset() / 60); 
+        const normalizedCity = placeValue.trim().toLowerCase();
+        if (TIMEZONE_GEO_REGISTRY[normalizedCity] !== undefined) {
+            resolvedTimezone = TIMEZONE_GEO_REGISTRY[normalizedCity];
+        }
+
         const inputPayload = {
             year, month, day, hour, minute,
-            timezone: -(new Date().getTimezoneOffset() / 60)
+            timezone: resolvedTimezone
         };
 
         currentBirthProfile = await getBirthData(inputPayload);
@@ -255,7 +296,8 @@ async function handleSubmit() {
             date: dobInput, 
             time: tobValue, 
             place: placeValue,
-            year, month, day, hour, minute
+            year, month, day, hour, minute,
+            timezone: resolvedTimezone
         };
 
         document.getElementById("detectedNakshatra").innerText = `${currentBirthProfile.nakshatra.name}`;
@@ -280,26 +322,7 @@ async function handleConfirm() {
     if (!currentBirthProfile) return;
 
     try {
-        const dobInput = document.getElementById("dob").value;
-        const tobValue = document.getElementById("tob").value;
-        const locationValue = document.getElementById("birth-place-input")?.value || "";
-
-        const [day, month, year] = dobInput.split("-").map(Number);
-        const [hour, minute] = tobValue.split(":").map(Number);
-
-        const profileSavePackage = {
-            ...currentBirthProfile,
-            year, month, day, hour, minute,
-            timezone: -(new Date().getTimezoneOffset() / 60),
-            inputs: { 
-                date: dobInput, 
-                time: tobValue, 
-                place: locationValue,
-                year, month, day, hour, minute
-            }
-        };
-
-        localStorage.setItem("permanentBirthProfile", JSON.stringify(profileSavePackage));
+        localStorage.setItem("permanentBirthProfile", JSON.stringify(currentBirthProfile));
         
         if (document.getElementById("confirmBtn")) document.getElementById("confirmBtn").style.display = "none";
         if (document.getElementById("rejectBtn")) document.getElementById("rejectBtn").style.display = "none";
@@ -321,7 +344,10 @@ async function handleConfirm() {
             updateHistoryCardHeader();
         }
 
-        await renderUserDashboard(profileSavePackage, new Date());
+        // Apply clean mobile panel toggle adjustments instantly on submission save
+        adjustMobileInitialPanelVisibility(true);
+
+        await renderUserDashboard(currentBirthProfile, new Date());
 
     } catch (err) {
         alert("Error executing profile save: " + err.message);
@@ -442,9 +468,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.switchMobileTab = function(tabId) {
-    if (window.innerWidth > 768) return; // Completely bypass on website/desktop layouts
+    if (window.innerWidth > 768) return; 
     
-    // 1. Manage Active Class Colors on Tabs
     const tabs = document.querySelectorAll('.nav-tab');
     tabs.forEach(tab => {
         if (tab.getAttribute('onclick').includes(tabId)) {
@@ -456,13 +481,11 @@ window.switchMobileTab = function(tabId) {
         }
     });
 
-    // 2. Select Target Cards by exact ID anchors
     const forecastCard = document.getElementById("card-forecast");
     const tipsCard = document.getElementById("mobile-tips-card");
     const importantCard = document.getElementById("card-important");
     const historyCard = document.getElementById("card-history");
 
-    // 3. Single Page Toggle Router
     if (forecastCard) forecastCard.style.display = (tabId === 'forecast') ? 'block' : 'none';
     if (tipsCard) tipsCard.style.display = (tabId === 'tips') ? 'block' : 'none';
     if (importantCard) importantCard.style.display = (tabId === 'important') ? 'block' : 'none';
