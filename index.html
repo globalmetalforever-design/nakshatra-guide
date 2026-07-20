@@ -73,15 +73,14 @@
 
         <hr class="golden-dashboard-divider">
 
-        <!-- Mobile Swapping Tab Header Submenu -->
+        <!-- Mobile Swapping Tab Header Submenu (Cleaned down to 3 options) -->
         <div id="mobile-navigation-bar" style="display: none; overflow-x: auto; white-space: nowrap; padding: 10px 5px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; -webkit-overflow-scrolling: touch;">
             <button class="nav-tab" onclick="switchMobileTab('forecast')" style="background: none; border: none; color: #ffffff; padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer; font-weight: bold;">Forecast</button>
-            <button class="nav-tab" onclick="switchMobileTab('tips')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">Transit Tips</button>
-            <button class="nav-tab" onclick="switchMobileTab('important')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">Important</button>
+            <button class="nav-tab" onclick="switchMobileTab('important')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">Guidance</button>
             <button class="nav-tab" onclick="switchMobileTab('history')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">History</button>
         </div>
 
-        <!-- 4 Equal Bottom Row Grid Panels -->
+        <!-- 3 Equal Bottom Row Grid Panels (Transit Tips Removed) -->
         <div id="forecastAndAttentionPanels" style="display: none; margin-top: 20px;">
             
             <div class="card" id="card-forecast">
@@ -92,8 +91,6 @@
                     <div id="forecastBox">Calculating coordinates...</div>
                 </div>
             </div>
-
-            <div class="card" id="mobile-tips-card"></div>
 
             <div class="card" id="card-important">
                 <div class="card-header">
