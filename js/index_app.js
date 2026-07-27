@@ -125,7 +125,7 @@ function processGuideQuestion() {
     }
 
     // 2. Detect Timeframe Mentioned
-    let timeframeLabel = "Next Month Outlook";
+    let timeframeLabel = "Outlook";
     if (rawQuestion.includes("today")) timeframeLabel = "Today's Reading";
     else if (rawQuestion.includes("this week")) timeframeLabel = "This Week's Reading";
     else if (rawQuestion.includes("this month")) timeframeLabel = "This Month's Reading";
