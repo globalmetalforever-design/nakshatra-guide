@@ -4,16 +4,11 @@ import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons
 
 let currentBirthProfile = null;
 
-// Global City-to-Timezone mapping registry database matrix
 const GLOBAL_CITY_TZ_DB = {
-    // India (IST)
     "chennai": 5.5, "mumbai": 5.5, "delhi": 5.5, "kolkata": 5.5, "bengaluru": 5.5, 
     "hyderabad": 5.5, "ahmedabad": 5.5, "pune": 5.5, "jaipur": 5.5, "lucknow": 5.5,
-    // Southeast Asia & UAE
     "singapore": 8.0, "dubai": 4.0, "abu dhabi": 4.0, "sharjah": 4.0,
-    // United Kingdom & Europe
     "london": 0.0, "manchester": 0.0, "birmingham": 0.0, "paris": 1.0, "berlin": 1.0,
-    // USA & Canada major birth hubs
     "new york": -5.0, "miami": -5.0, "boston": -5.0, "toronto": -5.0, "montreal": -5.0,
     "chicago": -6.0, "houston": -6.0, "dallas": -6.0, "winnipeg": -6.0,
     "denver": -7.0, "phoenix": -7.0, "calgary": -7.0,
@@ -32,6 +27,129 @@ document.addEventListener("DOMContentLoaded", () => {
         bgCanvas.style.pointerEvents = "none";
     }
 });
+
+function checkBirthdayAndFestivals(profile) {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth() + 1; // 1 - 12
+    const currentDayMonthStr = `${String(currentDay).padStart(2, '0')}-${String(currentMonth).padStart(2, '0')}`;
+
+    // 1. Birthday Check
+    const birthdayBox = document.getElementById("birthdayGreetingBox");
+    if (profile && profile.inputs && profile.inputs.date) {
+        const dateParts = profile.inputs.date.split("-").map(Number);
+        const bDay = dateParts[0];
+        const bMonth = dateParts[1];
+
+        if (bDay === currentDay && bMonth === currentMonth) {
+            if (birthdayBox) birthdayBox.style.display = "block";
+        } else {
+            if (birthdayBox) birthdayBox.style.display = "none";
+        }
+    } else {
+        if (birthdayBox) birthdayBox.style.display = "none";
+    }
+
+    // 2. Festival / Special Event Check
+    const userCountry = (profile?.inputs?.country || "India").trim().toLowerCase();
+    const festivalBox = document.getElementById("specialOccasionBox");
+    const festTitle = document.getElementById("festivalTitle");
+    const festDesc = document.getElementById("festivalDesc");
+
+    // Master Festival Database (Date Key: DD-MM)
+    const FESTIVAL_DATABASE = {
+        "01-01": { global: "🎉 New Year's Day — Fresh Annual Planetary Cycle" },
+        "14-01": { india: "🌾 Makar Sankranti / Pongal — Solar Transit into Makara (Capricorn)" },
+        "08-03": { global: "🌸 Maha Shivaratri — Auspicious Night of Consciousness" },
+        "25-03": { india: "🎨 Holi / Vasant Utsav — Spring Equinox Alignment" },
+        "14-04": { india: "🌺 Vedic New Year / Baisakhi / Puthandu — Solar Transit into Mesha (Aries)" },
+        "01-11": { india: "🪔 Diwali / Deepavali — Festival of Lights & Lakshmi Energy" },
+        "25-12": { global: "🎄 Winter Solstice Observance & Yuletide Alignment" }
+    };
+
+    const todayEvents = FESTIVAL_DATABASE[currentDayMonthStr];
+
+    if (todayEvents) {
+        let matchedEvent = null;
+        if (userCountry.includes("india")) {
+            matchedEvent = todayEvents.india || todayEvents.global;
+        } else {
+            matchedEvent = todayEvents.global || todayEvents.india;
+        }
+
+        if (matchedEvent && festivalBox && festTitle && festDesc) {
+            const [title, ...descParts] = matchedEvent.split("—");
+            festTitle.innerText = title.trim();
+            festDesc.innerText = descParts.join("—").trim() || "";
+            festivalBox.style.display = "block";
+            return;
+        }
+    }
+
+    // Default: Hide special occasion banner completely on normal days
+    if (festivalBox) {
+        festivalBox.style.display = "none";
+    }
+}
+// Q&A Matrix and Multi-Topic Question Processor
+function processGuideQuestion() {
+    const inputEl = document.getElementById("guideQnaInput");
+    const resultBox = document.getElementById("guideQnaResult");
+    if (!inputEl || !resultBox) return;
+
+    const rawQuestion = inputEl.value.trim().toLowerCase();
+    if (!rawQuestion) {
+        resultBox.style.display = "block";
+        resultBox.innerHTML = "<span style='color: #ff6b6b;'>Please enter a question first.</span>";
+        return;
+    }
+
+    resultBox.style.display = "block";
+    resultBox.innerHTML = "<span style='opacity: 0.7; font-style: italic;'>Analyzing planetary transits...</span>";
+
+    // 1. Detect Categories Mentioned
+    const categoriesFound = [];
+    if (rawQuestion.includes("career") || rawQuestion.includes("job") || rawQuestion.includes("work") || rawQuestion.includes("business") || rawQuestion.includes("promotion")) {
+        categoriesFound.push("career");
+    }
+    if (rawQuestion.includes("finance") || rawQuestion.includes("money") || rawQuestion.includes("wealth") || rawQuestion.includes("income") || rawQuestion.includes("expense") || rawQuestion.includes("investment")) {
+        categoriesFound.push("finance");
+    }
+    if (rawQuestion.includes("family") || rawQuestion.includes("home") || rawQuestion.includes("relationship") || rawQuestion.includes("marriage") || rawQuestion.includes("spouse") || rawQuestion.includes("children")) {
+        categoriesFound.push("family");
+    }
+
+    // Default to career + finance if no specific category keyword matches
+    if (categoriesFound.length === 0) {
+        categoriesFound.push("career");
+    }
+
+    // 2. Detect Timeframe Mentioned
+    let timeframeLabel = "Next Month Outlook";
+    if (rawQuestion.includes("today")) timeframeLabel = "Today's Reading";
+    else if (rawQuestion.includes("this week")) timeframeLabel = "This Week's Reading";
+    else if (rawQuestion.includes("this month")) timeframeLabel = "This Month's Reading";
+
+    // 3. Generate Answers for All Detected Topics
+    let responseHtml = `<div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-left: 3px solid #ffd700; border-radius: 4px;">`;
+    responseHtml += `<div style="font-size: 0.8rem; color: #ffd700; font-weight: bold; margin-bottom: 6px; text-transform: uppercase;">📅 ${timeframeLabel}</div>`;
+
+    if (categoriesFound.includes("career")) {
+        responseHtml += `<p style="margin: 0 0 8px 0;"><strong>💼 CAREER:</strong> Steady planetary support indicated. A favorable window for planning strategic steps, finalizing pending projects, and avoiding hasty job changes.</p>`;
+    }
+    if (categoriesFound.includes("finance")) {
+        responseHtml += `<p style="margin: 0 0 8px 0;"><strong>💰 FINANCE:</strong> Cash flow remains stable with steady growth. Keep speculative investments low and focus on consolidated long-term savings.</p>`;
+    }
+    if (categoriesFound.includes("family")) {
+        responseHtml += `<p style="margin: 0;"><strong>👨‍👩‍👧‍👦 FAMILY:</strong> Warm emotional energy prevails. Clear communication resolves recent misunderstandings smoothly.</p>`;
+    }
+
+    responseHtml += `</div>`;
+
+    setTimeout(() => {
+        resultBox.innerHTML = responseHtml;
+    }, 300);
+}
 
 function updateHistoryCardHeader() {
     const historyBox = document.getElementById("attentionBox");
@@ -90,6 +208,19 @@ function adjustMobileInitialPanelVisibility(hasStoredProfile) {
     }
 }
 
+function filterWeekendJargon(rawForecast, targetDate) {
+    const day = targetDate.getDay();
+    const isWeekend = (day === 0 || day === 6);
+    
+    if (isWeekend) {
+        return rawForecast
+            .replace(/[^.!?]*\b(office|career|colleagues|business meetings|corporate|boss|job promotions|professional deadlines|employment)\b[^.!?]*[.!?]/gi, '')
+            .replace(/^\s*<br\s*\/?>|<br\s*\/?>\s*$/gi, '')
+            .trim();
+    }
+    return rawForecast;
+}
+
 async function loadStoredProfileAndRender() {
     try {
         const storedData = localStorage.getItem("permanentBirthProfile");
@@ -128,13 +259,16 @@ async function loadStoredProfileAndRender() {
 }
 
 async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) {
+    checkBirthdayAndFestivals(storedBirthProfile)
     try {
         const dynamicForecast = await generateDailyForecast(storedBirthProfile, targetDate);
         const forecastBox = document.getElementById("forecastBox");
         
         if (forecastBox) {
             forecastBox.style.setProperty("color", "#e2e8f0", "important");
-            forecastBox.innerHTML = dynamicForecast.forecast;
+            
+            const processedText = filterWeekendJargon(dynamicForecast.forecast, targetDate);
+            forecastBox.innerHTML = processedText || "Rest and realign your energy fields today.";
             
             const strongTags = forecastBox.querySelectorAll("strong");
             strongTags.forEach(tag => {
@@ -185,24 +319,6 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
         if (document.getElementById("goodTime")) document.getElementById("goodTime").innerText = dynamicForecast.guidance.goodTime;
         if (document.getElementById("badTime")) document.getElementById("badTime").innerText = dynamicForecast.guidance.badTime;
 
-        let tipsCard = document.getElementById("mobile-tips-card");
-        if (tipsCard) {
-            tipsCard.innerHTML = `
-                <div class="card-header">
-                    <h3>🚨 Transit Watch: <span style="color: ${dynamicForecast.guidance.transitStatus === 'Clear' ? '#4adf8a' : '#ff6b6b'};">${dynamicForecast.guidance.transitStatus}</span></h3>
-                </div>
-                <div class="card-body">
-                    <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">Transit Tips:</strong>
-                    <span style="color: #e2e8f0; font-style: italic; line-height: 1.5; display: block; margin-bottom: 15px;">${dynamicForecast.guidance.transitTips}</span>
-                    
-                    <div style="border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 15px;">
-                        <strong style="color: #ffffff !important; display: block; margin-bottom: 6px;">🎯 ACTIVITY OF THE DAY:</strong>
-                        <span style="color: #e2e8f0; line-height: 1.5; display: block;">${dynamicForecast.guidance.cautionNote}</span>
-                    </div>
-                </div>
-            `;
-        }
-
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         const mobNav = document.getElementById("mobile-navigation-bar");
         
@@ -210,7 +326,6 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             if (mobNav) mobNav.style.display = "block";
             if (panelsContainer) {
                 panelsContainer.style.display = "block";
-                panelsContainer.style.gridTemplateColumns = "none";
                 panelsContainer.style.width = "100%";
             }
             if (typeof switchMobileTab === "function") {
@@ -220,10 +335,7 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             if (mobNav) mobNav.style.display = "none";
             if (panelsContainer) {
                 panelsContainer.style.display = "grid";
-                panelsContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
-                panelsContainer.style.gap = "20px";
                 panelsContainer.style.width = "100%";
-                panelsContainer.style.maxWidth = "100%";
             }
             
             const cForecast = document.getElementById("card-forecast");
@@ -231,7 +343,6 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             const cHistory = document.getElementById("card-history");
 
             if (cForecast) cForecast.style.display = 'block';
-            if (tipsCard) tipsCard.style.display = 'block';
             if (cImportant) cImportant.style.display = 'block';
             if (cHistory) cHistory.style.display = 'block';
         }
@@ -259,7 +370,9 @@ async function processManualHistoryLookup(profile, formattedDateString) {
         
         resultBox.style.fontStyle = "normal";
         resultBox.style.color = "#fff";
-        resultBox.innerHTML = historicalPayload.forecast.split('\n').join('<br>');
+        
+        const processedHistory = filterWeekendJargon(historicalPayload.forecast, explicitHistoryDate);
+        resultBox.innerHTML = processedHistory.split('\n').join('<br>');
     } catch (err) {
         resultBox.innerText = "Error tracking historical metrics.";
     }
@@ -282,8 +395,7 @@ async function handleSubmit() {
 
         const [hour, minute] = tobValue.split(":").map(Number);
 
-        // --- AUTOMATIC TIMEZONE LOOKUP MATRIX ---
-        let resolvedTimezone = -(new Date().getTimezoneOffset() / 60); // Dynamic client fallback baseline
+        let resolvedTimezone = -(new Date().getTimezoneOffset() / 60); 
         const normalizedCity = placeValue.trim().toLowerCase();
         
         if (GLOBAL_CITY_TZ_DB[normalizedCity] !== undefined) {
@@ -337,12 +449,6 @@ async function handleConfirm() {
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
             panelsContainer.style.display = "grid";
-            if (window.innerWidth > 768) {
-                panelsContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
-                panelsContainer.style.gap = "20px";
-            } else {
-                panelsContainer.style.display = "block";
-            }
         }
 
         const historyBox = document.getElementById("attentionBox"); 
@@ -351,7 +457,6 @@ async function handleConfirm() {
         }
 
         adjustMobileInitialPanelVisibility(true);
-
         await renderUserDashboard(currentBirthProfile, new Date());
 
     } catch (err) {
@@ -435,7 +540,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("confirmBtn")?.addEventListener("click", handleConfirm);
     document.getElementById("rejectBtn")?.addEventListener("click", handleReject);
     document.getElementById("resetBtn")?.addEventListener("click", handleReset);
-    
+    // Q&A Get Answer Button Listener
+    document.getElementById("guideQnaBtn")?.addEventListener("click", processGuideQuestion);
+
+    // Allow pressing 'Enter' in textarea to trigger answer
+    document.getElementById("guideQnaInput")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            processGuideQuestion();
+        }
+    });
     const dobInput = document.getElementById("dob");
     if (dobInput) {
         dobInput.addEventListener("input", (e) => {
@@ -462,10 +576,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // REFINED TOB HANDLER: Jump to City field ONLY when 5 full characters (HH:MM) are entered
     const tobInput = document.getElementById("tob");
     if (tobInput) {
         tobInput.addEventListener("change", () => {
-            if (tobInput.value) {
+            if (tobInput.value && tobInput.value.length === 5) {
                 document.getElementById("birth-place-input")?.focus();
             }
         });
@@ -487,12 +602,10 @@ window.switchMobileTab = function(tabId) {
     });
 
     const forecastCard = document.getElementById("card-forecast");
-    const tipsCard = document.getElementById("mobile-tips-card");
     const importantCard = document.getElementById("card-important");
     const historyCard = document.getElementById("card-history");
 
     if (forecastCard) forecastCard.style.display = (tabId === 'forecast') ? 'block' : 'none';
-    if (tipsCard) tipsCard.style.display = (tabId === 'tips') ? 'block' : 'none';
     if (importantCard) importantCard.style.display = (tabId === 'important') ? 'block' : 'none';
     if (historyCard) historyCard.style.display = (tabId === 'history') ? 'block' : 'none';
 };
