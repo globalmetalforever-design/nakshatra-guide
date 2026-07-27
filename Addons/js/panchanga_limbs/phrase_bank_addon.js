@@ -55,6 +55,6 @@ export const PHRASE_BANK = {
     alerts: {
         saturnSadeSati: "⚠️ SYSTEMIC RESTRUCTURING ALERT: Saturn is pressuring your core emotional foundations. You are currently in a high-audit cycle where shortcuts will backfire. Focus on radical patience; what is being stripped away is making room for permanent architecture.",
         marsSunFriction: "⚠️ FINANCIAL & VOLATILITY WARNING: An acute geometric alignment between the Sun and Mars is creating high-friction energy today. Avoid signing as a financial guarantor, entering legal commitments, or loaning money to others right now, as these funds risk permanent stagnation. Postpone high-stakes conversations by 48 hours.",
-        moonStagnation: "⚠️ DOMESTIC & ENERGY ALERT: The Moon is passing through your custom blind-spot house today, temporarily lowering your emotional armor. Guard your energy boundaries fiercely; do not absorb household friction or project temporary frustrations onto family members. Treat today as a quiet recovery phase."
+        moonStagnation: "DOMESTIC & ENERGY ALERT: The Moon is passing through your custom blind-spot house today, temporarily lowering your emotional armor. Guard your energy boundaries fiercely; do not absorb household friction or project temporary frustrations onto family members. Treat today as a quiet recovery phase."
     }
 };
