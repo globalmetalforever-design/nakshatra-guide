@@ -19,7 +19,20 @@ body {
     z-index: -9999 !important;
     pointer-events: none !important;
 }
-
+@keyframes birthdayGlow {
+    0% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+        border-color: rgba(255, 215, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        border-color: rgba(255, 215, 0, 0.9);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+        border-color: rgba(255, 215, 0, 0.4);
+    }
+}
 .dashboard-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -209,10 +222,10 @@ button:hover, .btn:hover {
         align-items: start;
     }
 
-    /* 4-Column Equidistant Bottom Row Config */
+    /* 3-Column Equidistant Bottom Row Config (Updated from 4 columns) */
     #forecastAndAttentionPanels {
         display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-columns: repeat(3, 1fr) !important;
         gap: 20px !important;
         width: 100% !important;
         max-width: 100% !important;

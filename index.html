@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nakshatra Guide Dashboard</title>
-    <link rel="stylesheet" href="style.css?v=114">
+    <link rel="stylesheet" href="style.css?v=115">
 </head>
 <body>
 
@@ -12,16 +12,11 @@
 
     <div class="dashboard-container">
         
+        <!-- Top Row 3-Panel Layout -->
         <div class="dashboard-row-three-columns">
             
-            <div class="card branding-card-panel">
-                <div class="branding-image-container">
-                    <img src="ng head.jpg" alt="Nakshatra Guide Header" class="scaled-panel-img">
-                </div>
-            </div>
-
-            <!-- Profile Input Form Panel -->
-            <div class="card outlined-card">
+            <!-- PANEL 1: Astrological Profile (DOB Input) -->
+            <div class="card outlined-card" id="profileFormPanel">
                 <div class="card-header">Astrological Profile</div>
                 <div class="card-body">
                     <div class="form-group">
@@ -44,12 +39,19 @@
                         <input type="text" id="country-input" placeholder="e.g. India" value="India">
                     </div>
                     
-                    <button id="submitBtn" class="btn primary-btn" style="margin-top: 20px;">Submit</button>
+                    <button id="submitBtn" class="btn primary-btn" style="margin-top: 20px; width: 100%;">Submit</button>
                 </div>
             </div>
 
-            <!-- Detected Metadata Profile Status Panel -->
-            <div class="card outlined-card">
+            <!-- PANEL 2 (CENTER): Logo Only -->
+            <div class="card branding-card-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                <div class="branding-image-container" style="max-height: 140px;">
+                    <img src="ng head.jpg" alt="Nakshatra Guide Logo" class="scaled-panel-img">
+                </div>
+            </div>
+
+            <!-- PANEL 3: Detected Nakshatra Panel -->
+            <div class="card outlined-card" id="detectedStatusPanel">
                 <div class="card-header">Detected Nakshatra</div>
                 <div class="card-body">
                     <div id="detectedNakshatra" class="highlight-text">Waiting for Birth Details</div>
@@ -57,14 +59,20 @@
                     <div id="activeForecastDateDisplay" style="margin-top: 4px; font-size: 0.88rem; color: rgba(255, 204, 0, 0.85); font-weight: bold;"></div>
                     
                     <div class="rasi-zodiac-details" style="margin-top: 15px;">
-                        <div>Vedic Moon Sign (Rasi): <strong id="vedicRasi">-</strong></div>
-                        <div style="margin-top: 8px;">Western Sun Sign: <strong id="westernZodiac">-</strong></div>
+                        <div>Vedic Sign (Rasi): <strong id="vedicRasi">-</strong></div>
+                        <div style="margin-top: 8px;">Zodiac Sign: <strong id="westernZodiac">-</strong></div>
+                    </div>
+
+                    <!-- Animated Birthday Wish Banner (Placed below Western Sign & above Reset Button) -->
+                    <div id="birthdayGreetingBox" style="display: none; margin-top: 15px; padding: 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid rgba(255, 215, 0, 0.6); border-radius: 8px; text-align: center; animation: birthdayGlow 1.8s infinite ease-in-out;">
+                        <span style="font-size: 1.05rem; font-weight: bold; color: #ffd700;">🎂 Happy Birthday!</span><br>
+                        <span style="font-size: 0.82rem; color: #ffffff;">May the transits bring light & progress for your solar return year.</span>
                     </div>
                     
                     <div class="action-buttons-group" style="margin-top: 20px;">
                         <button id="confirmBtn" style="display: none;" class="btn confirm-btn">Confirm</button>
                         <button id="rejectBtn" style="display: none;" class="btn reject-btn">Reject</button>
-                        <button id="resetBtn" style="display: none;" class="btn reset-btn">Reset Profile and enter fresh data</button>
+                        <button id="resetBtn" style="display: none;" class="btn reset-btn" style="width: 100%;">Reset Profile</button>
                     </div>
                 </div>
             </div>
@@ -73,14 +81,14 @@
 
         <hr class="golden-dashboard-divider">
 
-        <!-- Mobile Swapping Tab Header Submenu (Cleaned down to 3 options) -->
+        <!-- Mobile Submenu Navigation -->
         <div id="mobile-navigation-bar" style="display: none; overflow-x: auto; white-space: nowrap; padding: 10px 5px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; -webkit-overflow-scrolling: touch;">
             <button class="nav-tab" onclick="switchMobileTab('forecast')" style="background: none; border: none; color: #ffffff; padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer; font-weight: bold;">Forecast</button>
             <button class="nav-tab" onclick="switchMobileTab('important')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">Guidance</button>
             <button class="nav-tab" onclick="switchMobileTab('history')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">History</button>
         </div>
 
-        <!-- 3 Equal Bottom Row Grid Panels (Transit Tips Removed) -->
+        <!-- Bottom Row Panels (Forecast, Important Guide, History) -->
         <div id="forecastAndAttentionPanels" style="display: none; margin-top: 20px;">
             
             <div class="card" id="card-forecast">
@@ -92,6 +100,7 @@
                 </div>
             </div>
 
+            <!-- PANEL 5: Important Guide -->
             <div class="card" id="card-important">
                 <div class="card-header">
                     <h3>Important Guide</h3>
@@ -101,6 +110,24 @@
                     <strong>Lucky Number:</strong> <span id="luckyNumber">-</span><br>
                     <strong>Favorable time:</strong> <span id="goodTime">-</span><br>
                     <strong>Unfavorable time:</strong> <span id="badTime">-</span>
+
+                    <!-- Special Occasion / Festival Banner (Placed before Question Box) -->
+                    <div id="specialOccasionBox" style="display: none; margin-top: 15px; padding: 10px; background: rgba(202, 164, 55, 0.12); border: 1px dashed rgba(202, 164, 55, 0.4); border-radius: 6px;">
+                        <span id="festivalTitle" style="font-size: 0.92rem; font-weight: bold; color: #caa437;"></span><br>
+                        <span id="festivalDesc" style="font-size: 0.82rem; color: #e2e8f0;"></span>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px dashed rgba(255, 215, 0, 0.2); margin: 15px 0;">
+
+                    <!-- Q&A Section -->
+                    <div class="qna-section">
+                        <div style="font-size: 0.82rem; color: #ffd700; margin-bottom: 6px; font-style: italic;">
+                            💡 Ask any question related to Career, Family, Finance...
+                        </div>
+                        <textarea id="guideQnaInput" placeholder="Ask your question here..." style="width: 100%; height: 55px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 6px; color: #ffffff; padding: 8px; font-family: inherit; font-size: 0.9rem; resize: none; box-sizing: border-box; outline: none;"></textarea>
+                        <button id="guideQnaBtn" class="btn" style="width: 100%; margin-top: 8px; padding: 8px; background: #caa437; color: #060d1a; font-weight: bold; border-radius: 4px; cursor: pointer;">Get Answer</button>
+                        <div id="guideQnaResult" style="margin-top: 10px; font-size: 0.9rem; color: #ffffff; line-height: 1.5; display: none;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -117,6 +144,6 @@
 
     </div>
 
-    <script type="module" src="js/index_app.js?v=114"></script>
+    <script type="module" src="js/index_app.js?v=115"></script>
 </body>
 </html>
