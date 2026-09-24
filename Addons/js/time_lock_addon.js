@@ -1,3 +1,4 @@
+// Addons/js/time_lock_addon.js
 import { getSwiss, normalizeDegrees } from "../../js/birth_engine.js?v=103";
 import { calculateNodesTransit } from "./panchanga_limbs/nodes_engine.js";
 import { calculateMajorPlanetsTransit } from "./panchanga_limbs/planets_engine.js";
@@ -22,7 +23,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     const targetMonth = targetDate.getMonth() + 1;
     const targetDay = targetDate.getDate();
     
-    // Check if current target date is a weekend (0 = Sunday, 6 = Saturday)
+    // Weekend check
     const dayOfWeek = targetDate.getDay();
     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
     
@@ -47,17 +48,11 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     };
 
     const transitNakshatraIndex = Math.floor(transitMoonLong / (360 / 27));
-    const phraseSelectorIndex = targetDay;
+    
+    // Dynamic daily selector seed to avoid phrase repetition
+    const seed = (targetDay + targetMonth * 7 + (birthProfile.inputs?.day || 1)) % 100;
 
-    // Blended Calculations
-    let jaiminiStatusPlanet = "sun";
-    if (birthProfile.inputs?.day % 3 === 0) jaiminiStatusPlanet = "jupiter";
-    if (birthProfile.inputs?.day % 3 === 1) jaiminiStatusPlanet = "mercury";
-
-    const sunMarsDiff = Math.abs(planets.sun.longitude - planets.mars.longitude);
-    const isWesternAspectTense = (sunMarsDiff >= 85 && sunMarsDiff <= 95) || (sunMarsDiff >= 175 && sunMarsDiff <= 185);
-
-    // --- 1. CAREER (Concise & Simple) ---
+    // --- 1. CAREER (Rich & Emotionally Resonant) ---
     let careerScore = 0;
     if ([3, 6, 10, 11].includes(houseMap.sun)) careerScore += checkPlanetaryVedha("sun", houseMap.sun, houseMap) ? 0 : 2; 
     else careerScore -= 1;
@@ -68,16 +63,28 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     if ([3, 6, 11].includes(houseMap.saturn)) careerScore += checkPlanetaryVedha("saturn", houseMap.saturn, houseMap) ? 0 : 1;
     if ([1, 2, 4, 7, 8, 12].includes(houseMap.saturn)) careerScore -= 2;
 
+    let careerTier = "medium";
+    if (careerScore >= 2) careerTier = "high";
+    else if (careerScore <= -2) careerTier = "low";
+
     let careerText = "";
     if (isWeekend) {
-        careerText = "Unplug from work today. Focus on your personal energy and recharge.";
+        careerText = "Step back from external ambitions today. Give yourself permission to disconnect from the urgency of production, honor your mental reserves, and allow your deeper creative intuition to quietly recharge.";
     } else {
-        if (careerScore >= 2) careerText = "Great energy for work. Tasks will flow easily and progress comes quickly.";
-        else if (careerScore <= -2) careerText = "Work might feel a bit slow or demanding. Keep your head down and stay patient.";
-        else careerText = "A steady, routine workday. Focus on your regular duties and avoid rash changes.";
+        const pool = PHRASE_BANK.career[careerTier] || [];
+        careerText = pool[seed % pool.length];
+        
+        // Contextual depth extension
+        if (careerTier === "high") {
+            careerText += " Your focus is exceptionally aligned right now; what you initiate carries natural authority and commands quiet respect.";
+        } else if (careerTier === "low") {
+            careerText += " Do not misinterpret temporary stagnation as personal regression. Protect your peace from demanding egos and let non-essential deadlines wait.";
+        } else {
+            careerText += " Use this balanced rhythm to refine the finer details of your craft. Small, steady efforts made in silence today will shield you against future turbulence.";
+        }
     }
 
-    // --- 2. FINANCE (Concise & Simple) ---
+    // --- 2. FINANCE (Grounding & Psychological Depth) ---
     let financeScore = 0;
     if ([2, 5, 7, 9, 11].includes(houseMap.jupiter)) financeScore += checkPlanetaryVedha("jupiter", houseMap.jupiter, houseMap) ? 0 : 3;
     else financeScore -= 2;
@@ -85,61 +92,80 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     if ([1, 2, 3, 4, 5, 8, 9, 11, 12].includes(houseMap.venus)) financeScore += checkPlanetaryVedha("venus", houseMap.venus, houseMap) ? 0 : 1;
     else financeScore -= 1;
 
-    let financeText = "";
-    if (financeScore >= 2) financeText = "Favorable day for money matters. Gains and good opportunities are highlighted.";
-    else if (financeScore <= -2) financeText = "Watch your expenses today. Avoid impulsive buying or lending money.";
-    else financeText = "Balanced financial day. Stick to your budget and avoid unnecessary risks.";
+    let financeTier = "medium";
+    if (financeScore >= 2) financeTier = "high";
+    else if (financeScore <= -2) financeTier = "low";
 
-    // --- 3. FAMILY & EMOTIONS ---
-    let familyText = "Harmonious energy at home. Good day for heartfelt conversations.";
-    if ([6, 8, 12].includes(houseMap.moon)) {
-        familyText = "You may feel a bit sensitive or misunderstood today. Speak gently with loved ones.";
+    const finPool = PHRASE_BANK.finance[financeTier] || [];
+    let financeText = finPool[(seed + 1) % finPool.length];
+
+    if (financeTier === "high") {
+        financeText += " An instinct for long-term security replaces reactive scarcity fears; trust your discernment when organizing investments or budgeting for what truly matters.";
+    } else if (financeTier === "low") {
+        financeText += " Guard against emotional spending used as a coping mechanism today. Slow down before hitting approve on large transactions or extending loans.";
+    } else {
+        financeText += " A quiet audit of your recurring commitments and resource streams brings profound mental clarity and emotional grounding.";
     }
 
-    // --- 4. CAUTION & FORWARD-LOOKING TRANSIT WARNING ENGINE ---
-    let cautionText = "Keep your mind calm and avoid rushing through important tasks.";
+    // --- 3. FAMILY & EMOTIONS (Heartfelt & Empathetic) ---
+    const famPool = PHRASE_BANK.family || [];
+    let familyText = famPool[(seed + 2) % famPool.length];
 
-    // Check 2-Day Ahead Transit Warning System
+    if ([6, 8, 12].includes(houseMap.moon)) {
+        familyText = "The transit Moon creates a sensitive emotional undertone today. You may feel a bit emotionally unguarded or misunderstood by loved ones. Soften your communication, resist taking offhand comments to heart, and offer the same patience you secretly hope to receive.";
+    } else if ([4, 5, 9].includes(houseMap.moon)) {
+        familyText = "A comforting and protective energy wraps around your domestic sphere today. Heart-to-heart conversations bridge subtle gaps effortlessly; making space to listen deeply brings immense warmth back into your home.";
+    }
+
+    // --- 4. CAUTION & FORWARD-LOOKING TRANSIT ALERT ---
+    const sunMarsDiff = Math.abs(planets.sun.longitude - planets.mars.longitude);
+    const isWesternAspectTense = (sunMarsDiff >= 85 && sunMarsDiff <= 95) || (sunMarsDiff >= 175 && sunMarsDiff <= 185);
+
+    let cautionText = "";
+    if (isWesternAspectTense) {
+        cautionText = "Subconscious friction or sudden spikes in impatience are active. Resist the urge to enter disputes to prove a point; silence and composure are your greatest armor today.";
+    } else if ([12, 1, 2].includes(houseMap.saturn)) {
+        cautionText = "Saturn asks for methodical endurance. Delays or bureaucratic sluggishness might test your nerves; stay grounded in your routine and refuse to rush what needs time to mature.";
+    } else {
+        const cautionPool = PHRASE_BANK.caution || [];
+        cautionText = cautionPool[(seed + 3) % cautionPool.length];
+    }
+
+    // 2-Day Ahead Transit Warning Engine
     const futureDate = new Date(targetDate);
     futureDate.setDate(futureDate.getDate() + 2);
     const futurePlanets = await calculateMajorPlanetsTransit(futureDate);
     const futureSunMarsDiff = Math.abs(futurePlanets.sun.longitude - futurePlanets.mars.longitude);
     const isFutureTense = (futureSunMarsDiff >= 85 && futureSunMarsDiff <= 95) || (futureSunMarsDiff >= 175 && futureSunMarsDiff <= 185);
 
-    if (isWesternAspectTense) {
-        cautionText = "Spikes in stress or conflicts are likely today. Pause before reacting.";
-    } else if ([12, 1, 2].includes(houseMap.saturn)) {
-        cautionText = "Expect minor delays or bottlenecks. Double-check your details.";
-    }
-
-    // Append 2-Day Advance Alert Badge if a shift is approaching
     if (isFutureTense) {
-        cautionText = `<span style="color:#ff6b6b; font-weight:bold;">⚠️ UPCOMING WARNING (Next 2 Days):</span> Heavy planetary shift approaching. Avoid major risks or disputes in the coming days.<br>${cautionText}`;
+        cautionText = `<span style="color:#ff6b6b; font-weight:bold;">⚠️ UPCOMING WARNING (Next 2 Days):</span> An intense planetary clash is approaching. Wrap up pending tasks early and postpone high-stakes arguments or financial commitments.<br><br>${cautionText}`;
     }
 
     if (isWeekend) {
-        cautionText = "Guard your peace. Avoid letting unresolved work thoughts enter your home life.";
+        cautionText += " Protect your weekend boundaries fiercely—do not let unresolved external anxieties invade your personal sanctuary.";
     }
 
-    // Remedial note for guidance
-    const remedyText = "Light a lamp or spend 5 minutes in quiet meditation to align your thoughts.";
+    // Remedial Guidance
+    const spiritPool = PHRASE_BANK.spirituality || [];
+    const remedyText = spiritPool[seed % spiritPool.length];
 
     const guidanceMetrics = addonComputeGuidance(
         birthProfile.nakshatra.number, 
         transitNakshatraIndex, 
-        careerScore >= 2 ? "high" : "medium", 
-        financeScore >= 2 ? "high" : "medium", 
+        careerTier, 
+        financeTier, 
         isWesternAspectTense ? "Risk Alert" : "Clear", 
         "", 
         remedyText
     );
 
-    // Short, scannable forecast output
+    // Formatted, rich output
     const singleLineForecast = 
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">💼 CAREER:</strong> ${careerText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">💰 FINANCE:</strong> ${financeText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">👨‍👩‍👧‍👦 FAMILY:</strong> ${familyText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">⚠️ CAUTION:</strong> ${cautionText}`;
+        `<strong style="color: #ffffff !important; font-weight: bold !important;">💼 CAREER & PURPOSE:</strong><br>${careerText}<br><br>` +
+        `<strong style="color: #ffffff !important; font-weight: bold !important;">💰 WEALTH & SECURITY:</strong><br>${financeText}<br><br>` +
+        `<strong style="color: #ffffff !important; font-weight: bold !important;">👨‍👩‍👧‍👦 INNER CIRCLE & EMOTIONS:</strong><br>${familyText}<br><br>` +
+        `<strong style="color: #ffffff !important; font-weight: bold !important;">⚠️ MINDFULNESS & CAUTION:</strong><br>${cautionText}`;
 
     return {
         forecast: singleLineForecast,
@@ -171,32 +197,15 @@ function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTi
 
     let goodTimeStr = isFavorable ? "09:30 AM - 11:00 AM" : "02:15 PM - 03:45 PM";
     let badTimeStr = isFavorable ? "04:30 PM - 05:45 PM" : "07:30 AM - 09:00 AM";
-
-    // Jargon-Free Hora Activity Windows
-    let horaActivityStr = "Strategy & Focus Window (11:00 AM - 12:30 PM) — Best for planning and reviewing details.";
-    if (isFavorable) {
-        horaActivityStr = "Business & Projects Window (09:30 AM - 11:00 AM) — Best for pitch presentations, key decisions, and closing deals.";
-    } else if (score === 3 || score === 5) {
-        horaActivityStr = "Rest & Reflection Window (02:15 PM - 03:45 PM) — Best to delay major announcements or big commitments.";
+    if (score === 4 || score === 9) {
+        goodTimeStr = "08:15 AM - 10:45 AM (Auspicious Peak)";
     }
-
-    // Daily Micro-Remedy
-    const remedyList = [
-        "Take 2 minutes of quiet breathing at mid-day to maintain emotional focus.",
-        "Wear shades of green or light yellow to balance personal energy today.",
-        "Spend 5 minutes outdoors in the morning sunlight before starting work.",
-        "Keep a glass of water on your desk and stay consistently hydrated.",
-        "Clear desk clutter before beginning high-priority tasks today."
-    ];
-    const microRemedyStr = remedyList[(birthNakshatraNum + score) % remedyList.length];
 
     return {
         luckyColor: dynamicColor,
         luckyNumber: isFavorable ? String((score * 3) % 9 || 9) : String((score * 2) % 7 || 3),
         goodTime: goodTimeStr,
         badTime: badTimeStr,
-        horaWindow: horaActivityStr,      // <--- Jargon-free activity timing
-        microRemedy: microRemedyStr,      // <--- Micro remedy string
         transitStatus: transitStatusText,
         transitTips: transitTipsText,
         cautionNote: cautionNoteText
