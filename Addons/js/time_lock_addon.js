@@ -48,11 +48,9 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     };
 
     const transitNakshatraIndex = Math.floor(transitMoonLong / (360 / 27));
-    
-    // Dynamic daily selector seed to avoid phrase repetition
     const seed = (targetDay + targetMonth * 7 + (birthProfile.inputs?.day || 1)) % 100;
 
-    // --- 1. CAREER (Rich & Emotionally Resonant) ---
+    // --- 1. CAREER EVALUATION ---
     let careerScore = 0;
     if ([3, 6, 10, 11].includes(houseMap.sun)) careerScore += checkPlanetaryVedha("sun", houseMap.sun, houseMap) ? 0 : 2; 
     else careerScore -= 1;
@@ -67,24 +65,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     if (careerScore >= 2) careerTier = "high";
     else if (careerScore <= -2) careerTier = "low";
 
-    let careerText = "";
-    if (isWeekend) {
-        careerText = "Step back from external ambitions today. Give yourself permission to disconnect from the urgency of production, honor your mental reserves, and allow your deeper creative intuition to quietly recharge.";
-    } else {
-        const pool = PHRASE_BANK.career[careerTier] || [];
-        careerText = pool[seed % pool.length];
-        
-        // Contextual depth extension
-        if (careerTier === "high") {
-            careerText += " Your focus is exceptionally aligned right now; what you initiate carries natural authority and commands quiet respect.";
-        } else if (careerTier === "low") {
-            careerText += " Do not misinterpret temporary stagnation as personal regression. Protect your peace from demanding egos and let non-essential deadlines wait.";
-        } else {
-            careerText += " Use this balanced rhythm to refine the finer details of your craft. Small, steady efforts made in silence today will shield you against future turbulence.";
-        }
-    }
-
-    // --- 2. FINANCE (Grounding & Psychological Depth) ---
+    // --- 2. FINANCE EVALUATION ---
     let financeScore = 0;
     if ([2, 5, 7, 9, 11].includes(houseMap.jupiter)) financeScore += checkPlanetaryVedha("jupiter", houseMap.jupiter, houseMap) ? 0 : 3;
     else financeScore -= 2;
@@ -96,42 +77,49 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     if (financeScore >= 2) financeTier = "high";
     else if (financeScore <= -2) financeTier = "low";
 
+    // --- EXTRACT CONCISE SENTENCES FROM PHRASE BANK ---
+    // Take the primary sentence from each section without long trailing extensions
+    const careerPool = PHRASE_BANK.career[careerTier] || [];
+    const rawCareer = careerPool[seed % careerPool.length] || "A steady rhythm supports your key efforts today.";
+    const careerCoreSentence = rawCareer.split('.')[0] + ".";
+
     const finPool = PHRASE_BANK.finance[financeTier] || [];
-    let financeText = finPool[(seed + 1) % finPool.length];
+    const rawFinance = finPool[(seed + 1) % finPool.length] || "Resource flows remain balanced.";
+    const financeCoreSentence = rawFinance.split('.')[0] + ".";
 
-    if (financeTier === "high") {
-        financeText += " An instinct for long-term security replaces reactive scarcity fears; trust your discernment when organizing investments or budgeting for what truly matters.";
-    } else if (financeTier === "low") {
-        financeText += " Guard against emotional spending used as a coping mechanism today. Slow down before hitting approve on large transactions or extending loans.";
-    } else {
-        financeText += " A quiet audit of your recurring commitments and resource streams brings profound mental clarity and emotional grounding.";
-    }
-
-    // --- 3. FAMILY & EMOTIONS (Heartfelt & Empathetic) ---
-    const famPool = PHRASE_BANK.family || [];
-    let familyText = famPool[(seed + 2) % famPool.length];
-
+    let emotionalSentence = "";
     if ([6, 8, 12].includes(houseMap.moon)) {
-        familyText = "The transit Moon creates a sensitive emotional undertone today. You may feel a bit emotionally unguarded or misunderstood by loved ones. Soften your communication, resist taking offhand comments to heart, and offer the same patience you secretly hope to receive.";
-    } else if ([4, 5, 9].includes(houseMap.moon)) {
-        familyText = "A comforting and protective energy wraps around your domestic sphere today. Heart-to-heart conversations bridge subtle gaps effortlessly; making space to listen deeply brings immense warmth back into your home.";
+        emotionalSentence = "Keep personal interactions gentle, as the Moon brings heightened emotional sensitivity.";
+    } else {
+        const famPool = PHRASE_BANK.family || [];
+        const rawFam = famPool[(seed + 2) % famPool.length] || "A supportive environment anchors your home sphere.";
+        emotionalSentence = rawFam.split('.')[0] + ".";
     }
 
-    // --- 4. CAUTION & FORWARD-LOOKING TRANSIT ALERT ---
+    // --- PARAGRAPH 1: CONCISE BLENDED SUMMARY (NO HEADINGS) ---
+    let mainParagraph = "";
+    if (isWeekend) {
+        mainParagraph = `Step back from professional pressure today and give your energy room to recharge. ${financeCoreSentence} ${emotionalSentence}`;
+    } else {
+        mainParagraph = `${careerCoreSentence} ${financeCoreSentence} ${emotionalSentence}`;
+    }
+
+    // --- PARAGRAPH 2: CAUTION SUB-HEAD ---
     const sunMarsDiff = Math.abs(planets.sun.longitude - planets.mars.longitude);
     const isWesternAspectTense = (sunMarsDiff >= 85 && sunMarsDiff <= 95) || (sunMarsDiff >= 175 && sunMarsDiff <= 185);
 
-    let cautionText = "";
+    let cautionBody = "";
     if (isWesternAspectTense) {
-        cautionText = "Subconscious friction or sudden spikes in impatience are active. Resist the urge to enter disputes to prove a point; silence and composure are your greatest armor today.";
+        cautionBody = "Spikes in impatience are likely today; pause before reacting and avoid entering unnecessary disputes.";
     } else if ([12, 1, 2].includes(houseMap.saturn)) {
-        cautionText = "Saturn asks for methodical endurance. Delays or bureaucratic sluggishness might test your nerves; stay grounded in your routine and refuse to rush what needs time to mature.";
+        cautionBody = "Delays or bureaucratic sluggishness may test your patience; stay steady and avoid rushing critical details.";
     } else {
         const cautionPool = PHRASE_BANK.caution || [];
-        cautionText = cautionPool[(seed + 3) % cautionPool.length];
+        const rawCaution = cautionPool[(seed + 3) % cautionPool.length] || "Guard your inner peace and verify details before making firm commitments.";
+        cautionBody = rawCaution.split('.')[0] + ".";
     }
 
-    // 2-Day Ahead Transit Warning Engine
+    // 2-Day Ahead Transit Warning Alert Check
     const futureDate = new Date(targetDate);
     futureDate.setDate(futureDate.getDate() + 2);
     const futurePlanets = await calculateMajorPlanetsTransit(futureDate);
@@ -139,16 +127,22 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     const isFutureTense = (futureSunMarsDiff >= 85 && futureSunMarsDiff <= 95) || (futureSunMarsDiff >= 175 && futureSunMarsDiff <= 185);
 
     if (isFutureTense) {
-        cautionText = `<span style="color:#ff6b6b; font-weight:bold;">⚠️ UPCOMING WARNING (Next 2 Days):</span> An intense planetary clash is approaching. Wrap up pending tasks early and postpone high-stakes arguments or financial commitments.<br><br>${cautionText}`;
+        cautionBody = `A tense planetary shift is approaching over the next 48 hours. Wrap up important tasks early. ${cautionBody}`;
     }
 
     if (isWeekend) {
-        cautionText += " Protect your weekend boundaries fiercely—do not let unresolved external anxieties invade your personal sanctuary.";
+        cautionBody += " Keep work-related anxieties away from your personal sanctuary.";
     }
 
-    // Remedial Guidance
+    const cautionParagraph = `<span style="font-weight: bold; text-decoration: underline; color: #ffd700;">CAUTION:</span> ${cautionBody}`;
+
+    // Combine into two paragraphs separated by a paragraph break
+    const formattedForecast = `<p style="margin: 0 0 12px 0; line-height: 1.6;">${mainParagraph}</p><p style="margin: 0; line-height: 1.6;">${cautionParagraph}</p>`;
+
+    // --- GUIDANCE METRICS ---
     const spiritPool = PHRASE_BANK.spirituality || [];
-    const remedyText = spiritPool[seed % spiritPool.length];
+    const rawRemedy = spiritPool[seed % spiritPool.length] || "Take 2 minutes of quiet breathing to align your focus.";
+    const remedyText = rawRemedy.split('.')[0] + ".";
 
     const guidanceMetrics = addonComputeGuidance(
         birthProfile.nakshatra.number, 
@@ -160,15 +154,8 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
         remedyText
     );
 
-    // Formatted, rich output
-    const singleLineForecast = 
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">💼 CAREER & PURPOSE:</strong><br>${careerText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">💰 WEALTH & SECURITY:</strong><br>${financeText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">👨‍👩‍👧‍👦 INNER CIRCLE & EMOTIONS:</strong><br>${familyText}<br><br>` +
-        `<strong style="color: #ffffff !important; font-weight: bold !important;">⚠️ MINDFULNESS & CAUTION:</strong><br>${cautionText}`;
-
     return {
-        forecast: singleLineForecast,
+        forecast: formattedForecast,
         guidance: guidanceMetrics
     };
 }
