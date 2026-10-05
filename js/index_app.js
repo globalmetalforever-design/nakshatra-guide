@@ -15,140 +15,39 @@ const GLOBAL_CITY_TZ_DB = {
     "los angeles": -8.0, "san francisco": -8.0, "seattle": -8.0, "vancouver": -8.0
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-    const bgCanvas = document.getElementById("starfield-bg");
-    if (bgCanvas) {
-        bgCanvas.style.position = "fixed";
-        bgCanvas.style.top = "0";
-        bgCanvas.style.left = "0";
-        bgCanvas.style.width = "100vw";
-        bgCanvas.style.height = "100vh";
-        bgCanvas.style.zIndex = "-9999";
-        bgCanvas.style.pointerEvents = "none";
-    }
-});
+// -------------------------------------------------------------------------
+// View & Layout State Controller
+// -------------------------------------------------------------------------
+function setProfileViewMode(hasStoredProfile) {
+    const profileFormPanel = document.getElementById("profileFormPanel");
+    const detectedPanel = document.getElementById("detectedStatusPanel");
+    const topRow = document.querySelector(".dashboard-row-three-columns");
 
-function checkBirthdayAndFestivals(profile) {
-    const today = new Date();
-    const currentDay = today.getDate();
-    const currentMonth = today.getMonth() + 1; // 1 - 12
-    const currentDayMonthStr = `${String(currentDay).padStart(2, '0')}-${String(currentMonth).padStart(2, '0')}`;
+    if (hasStoredProfile) {
+        // RETURNING USER: Hide the DOB/Time/City/Country input card
+        if (profileFormPanel) profileFormPanel.style.display = "none";
+        if (detectedPanel) detectedPanel.style.display = "block";
+        if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "none";
+        if (document.getElementById("confirmBtn")) document.getElementById("confirmBtn").style.display = "none";
+        if (document.getElementById("rejectBtn")) document.getElementById("rejectBtn").style.display = "none";
+        if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
 
-    // 1. Birthday Check
-    const birthdayBox = document.getElementById("birthdayGreetingBox");
-    if (profile && profile.inputs && profile.inputs.date) {
-        const dateParts = profile.inputs.date.split("-").map(Number);
-        const bDay = dateParts[0];
-        const bMonth = dateParts[1];
-
-        if (bDay === currentDay && bMonth === currentMonth) {
-            if (birthdayBox) birthdayBox.style.display = "block";
-        } else {
-            if (birthdayBox) birthdayBox.style.display = "none";
+        if (topRow && window.innerWidth > 768) {
+            topRow.style.gridTemplateColumns = "1fr 1fr";
         }
     } else {
-        if (birthdayBox) birthdayBox.style.display = "none";
-    }
+        // FRESH / RESET USER: Show input card and reset action states
+        if (profileFormPanel) profileFormPanel.style.display = "block";
+        if (detectedPanel) detectedPanel.style.display = "block";
+        if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "inline-block";
+        if (document.getElementById("confirmBtn")) document.getElementById("confirmBtn").style.display = "none";
+        if (document.getElementById("rejectBtn")) document.getElementById("rejectBtn").style.display = "none";
+        if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "none";
 
-    // 2. Festival / Special Event Check
-    const userCountry = (profile?.inputs?.country || "India").trim().toLowerCase();
-    const festivalBox = document.getElementById("specialOccasionBox");
-    const festTitle = document.getElementById("festivalTitle");
-    const festDesc = document.getElementById("festivalDesc");
-
-    // Master Festival Database (Date Key: DD-MM)
-    const FESTIVAL_DATABASE = {
-        "01-01": { global: "🎉 New Year's Day — Fresh Annual Planetary Cycle" },
-        "14-01": { india: "🌾 Makar Sankranti / Pongal — Solar Transit into Makara (Capricorn)" },
-        "08-03": { global: "🌸 Maha Shivaratri — Auspicious Night of Consciousness" },
-        "25-03": { india: "🎨 Holi / Vasant Utsav — Spring Equinox Alignment" },
-        "14-04": { india: "🌺 Vedic New Year / Baisakhi / Puthandu — Solar Transit into Mesha (Aries)" },
-        "01-11": { india: "🪔 Diwali / Deepavali — Festival of Lights & Lakshmi Energy" },
-        "25-12": { global: "🎄 Winter Solstice Observance & Yuletide Alignment" }
-    };
-
-    const todayEvents = FESTIVAL_DATABASE[currentDayMonthStr];
-
-    if (todayEvents) {
-        let matchedEvent = null;
-        if (userCountry.includes("india")) {
-            matchedEvent = todayEvents.india || todayEvents.global;
-        } else {
-            matchedEvent = todayEvents.global || todayEvents.india;
-        }
-
-        if (matchedEvent && festivalBox && festTitle && festDesc) {
-            const [title, ...descParts] = matchedEvent.split("—");
-            festTitle.innerText = title.trim();
-            festDesc.innerText = descParts.join("—").trim() || "";
-            festivalBox.style.display = "block";
-            return;
+        if (topRow && window.innerWidth > 768) {
+            topRow.style.gridTemplateColumns = "repeat(3, 1fr)";
         }
     }
-
-    // Default: Hide special occasion banner completely on normal days
-    if (festivalBox) {
-        festivalBox.style.display = "none";
-    }
-}
-// Q&A Matrix and Multi-Topic Question Processor
-function processGuideQuestion() {
-    const inputEl = document.getElementById("guideQnaInput");
-    const resultBox = document.getElementById("guideQnaResult");
-    if (!inputEl || !resultBox) return;
-
-    const rawQuestion = inputEl.value.trim().toLowerCase();
-    if (!rawQuestion) {
-        resultBox.style.display = "block";
-        resultBox.innerHTML = "<span style='color: #ff6b6b;'>Please enter a question first.</span>";
-        return;
-    }
-
-    resultBox.style.display = "block";
-    resultBox.innerHTML = "<span style='opacity: 0.7; font-style: italic;'>Analyzing planetary transits...</span>";
-
-    // 1. Detect Categories Mentioned
-    const categoriesFound = [];
-    if (rawQuestion.includes("career") || rawQuestion.includes("job") || rawQuestion.includes("work") || rawQuestion.includes("business") || rawQuestion.includes("promotion")) {
-        categoriesFound.push("career");
-    }
-    if (rawQuestion.includes("finance") || rawQuestion.includes("money") || rawQuestion.includes("wealth") || rawQuestion.includes("income") || rawQuestion.includes("expense") || rawQuestion.includes("investment")) {
-        categoriesFound.push("finance");
-    }
-    if (rawQuestion.includes("family") || rawQuestion.includes("home") || rawQuestion.includes("relationship") || rawQuestion.includes("marriage") || rawQuestion.includes("spouse") || rawQuestion.includes("children")) {
-        categoriesFound.push("family");
-    }
-
-    // Default to career + finance if no specific category keyword matches
-    if (categoriesFound.length === 0) {
-        categoriesFound.push("career");
-    }
-
-    // 2. Detect Timeframe Mentioned
-    let timeframeLabel = "Outlook";
-    if (rawQuestion.includes("today")) timeframeLabel = "Today's Reading";
-    else if (rawQuestion.includes("this week")) timeframeLabel = "This Week's Reading";
-    else if (rawQuestion.includes("this month")) timeframeLabel = "This Month's Reading";
-
-    // 3. Generate Answers for All Detected Topics
-    let responseHtml = `<div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-left: 3px solid #ffd700; border-radius: 4px;">`;
-    responseHtml += `<div style="font-size: 0.8rem; color: #ffd700; font-weight: bold; margin-bottom: 6px; text-transform: uppercase;">📅 ${timeframeLabel}</div>`;
-
-    if (categoriesFound.includes("career")) {
-        responseHtml += `<p style="margin: 0 0 8px 0;"><strong>💼 CAREER:</strong> Steady planetary support indicated. A favorable window for planning strategic steps, finalizing pending projects, and avoiding hasty job changes.</p>`;
-    }
-    if (categoriesFound.includes("finance")) {
-        responseHtml += `<p style="margin: 0 0 8px 0;"><strong>💰 FINANCE:</strong> Cash flow remains stable with steady growth. Keep speculative investments low and focus on consolidated long-term savings.</p>`;
-    }
-    if (categoriesFound.includes("family")) {
-        responseHtml += `<p style="margin: 0;"><strong>👨‍👩‍👧‍👦 FAMILY:</strong> Warm emotional energy prevails. Clear communication resolves recent misunderstandings smoothly.</p>`;
-    }
-
-    responseHtml += `</div>`;
-
-    setTimeout(() => {
-        resultBox.innerHTML = responseHtml;
-    }, 300);
 }
 
 function updateHistoryCardHeader() {
@@ -190,24 +89,6 @@ function restoreFormInputs(profile) {
     if (document.getElementById("country-input")) document.getElementById("country-input").value = profile.inputs.country || "";
 }
 
-function adjustMobileInitialPanelVisibility(hasStoredProfile) {
-    if (window.innerWidth <= 768) {
-        const panels = document.querySelectorAll('.dashboard-row-three-columns .card');
-        if (panels.length >= 3) {
-            const dobPanel = panels[1]; 
-            const detectedPanel = panels[2]; 
-            
-            if (hasStoredProfile) {
-                if (dobPanel) dobPanel.style.display = 'none';
-                if (detectedPanel) detectedPanel.style.display = 'block';
-            } else {
-                if (dobPanel) dobPanel.style.display = 'block';
-                if (detectedPanel) detectedPanel.style.display = 'block';
-            }
-        }
-    }
-}
-
 function filterWeekendJargon(rawForecast, targetDate) {
     const day = targetDate.getDay();
     const isWeekend = (day === 0 || day === 6);
@@ -221,11 +102,79 @@ function filterWeekendJargon(rawForecast, targetDate) {
     return rawForecast;
 }
 
+// -------------------------------------------------------------------------
+// Dynamic Birthday & Special Event Engine
+// -------------------------------------------------------------------------
+function checkBirthdayAndFestivals(profile) {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth() + 1;
+    const currentDayMonthStr = `${String(currentDay).padStart(2, '0')}-${String(currentMonth).padStart(2, '0')}`;
+
+    // 1. Birthday Check in Panel 3
+    const birthdayBox = document.getElementById("birthdayGreetingBox");
+    if (profile && profile.inputs && profile.inputs.date) {
+        const dateParts = profile.inputs.date.split("-").map(Number);
+        const bDay = dateParts[0];
+        const bMonth = dateParts[1];
+
+        if (bDay === currentDay && bMonth === currentMonth) {
+            if (birthdayBox) birthdayBox.style.display = "block";
+        } else {
+            if (birthdayBox) birthdayBox.style.display = "none";
+        }
+    } else {
+        if (birthdayBox) birthdayBox.style.display = "none";
+    }
+
+    // 2. Festival / Special Event Check
+    const userCountry = (profile?.inputs?.country || "India").trim().toLowerCase();
+    const festivalBox = document.getElementById("specialOccasionBox");
+    const festTitle = document.getElementById("festivalTitle");
+    const festDesc = document.getElementById("festivalDesc");
+
+    const FESTIVAL_DATABASE = {
+        "01-01": { global: "🎉 New Year's Day — Fresh Annual Planetary Cycle" },
+        "14-01": { india: "🌾 Makar Sankranti / Pongal — Solar Transit into Makara (Capricorn)" },
+        "08-03": { global: "🌸 Maha Shivaratri — Auspicious Night of Consciousness" },
+        "25-03": { india: "🎨 Holi / Vasant Utsav — Spring Equinox Alignment" },
+        "14-04": { india: "🌺 Vedic New Year / Baisakhi / Puthandu — Solar Transit into Mesha (Aries)" },
+        "01-11": { india: "🪔 Diwali / Deepavali — Festival of Lights & Lakshmi Energy" },
+        "25-12": { global: "🎄 Winter Solstice Observance & Yuletide Alignment" }
+    };
+
+    const todayEvents = FESTIVAL_DATABASE[currentDayMonthStr];
+
+    if (todayEvents) {
+        let matchedEvent = null;
+        if (userCountry.includes("india")) {
+            matchedEvent = todayEvents.india || todayEvents.global;
+        } else {
+            matchedEvent = todayEvents.global || todayEvents.india;
+        }
+
+        if (matchedEvent && festivalBox && festTitle && festDesc) {
+            const [title, ...descParts] = matchedEvent.split("—");
+            festTitle.innerText = title.trim();
+            festDesc.innerText = descParts.join("—").trim() || "";
+            festivalBox.style.display = "block";
+            return;
+        }
+    }
+
+    if (festivalBox) {
+        festivalBox.style.display = "none";
+    }
+}
+
+// -------------------------------------------------------------------------
+// Load Profile & Core Rendering
+// -------------------------------------------------------------------------
 async function loadStoredProfileAndRender() {
     try {
         const storedData = localStorage.getItem("permanentBirthProfile");
         if (!storedData) {
-            adjustMobileInitialPanelVisibility(false);
+            setProfileViewMode(false);
             return;
         }
 
@@ -234,7 +183,7 @@ async function loadStoredProfileAndRender() {
 
         if (!profile.nakshatra || (profile.hour === undefined && profile.birthHour === undefined && profile.inputs?.hour === undefined)) {
             localStorage.removeItem("permanentBirthProfile");
-            adjustMobileInitialPanelVisibility(false);
+            setProfileViewMode(false);
             return;
         }
 
@@ -244,37 +193,25 @@ async function loadStoredProfileAndRender() {
         if (document.getElementById("westernZodiac")) document.getElementById("westernZodiac").innerText = profile.zodiac?.name || "-";
 
         restoreFormInputs(profile);
-
-        if (document.getElementById("submitBtn")) document.getElementById("submitBtn").style.display = "none";
-        if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
-        
-        adjustMobileInitialPanelVisibility(true);
+        setProfileViewMode(true);
 
         await renderUserDashboard(profile, new Date());
     } catch (err) {
         console.error("Profile auto-load failed:", err);
         localStorage.removeItem("permanentBirthProfile");
-        adjustMobileInitialPanelVisibility(false);
+        setProfileViewMode(false);
     }
 }
 
 async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) {
-    checkBirthdayAndFestivals(storedBirthProfile)
     try {
         const dynamicForecast = await generateDailyForecast(storedBirthProfile, targetDate);
         const forecastBox = document.getElementById("forecastBox");
         
         if (forecastBox) {
             forecastBox.style.setProperty("color", "#e2e8f0", "important");
-            
             const processedText = filterWeekendJargon(dynamicForecast.forecast, targetDate);
             forecastBox.innerHTML = processedText || "Rest and realign your energy fields today.";
-            
-            const strongTags = forecastBox.querySelectorAll("strong");
-            strongTags.forEach(tag => {
-                tag.style.setProperty("color", "#ffffff", "important");
-                tag.style.setProperty("font-weight", "bold", "important");
-            });
         }
 
         const activeDateBox = document.getElementById("activeForecastDateDisplay");
@@ -282,10 +219,17 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             activeDateBox.innerText = `Date: ${getFormattedCurrentDate(targetDate)}`;
         }
 
+        // Render Combined Guidance Metrics beneath forecast
+        if (document.getElementById("luckyColor")) document.getElementById("luckyColor").innerText = dynamicForecast.guidance.luckyColor;
+        if (document.getElementById("goodTime")) document.getElementById("goodTime").innerText = dynamicForecast.guidance.goodTime;
+        if (document.getElementById("badTime")) document.getElementById("badTime").innerText = dynamicForecast.guidance.badTime;
+
+        checkBirthdayAndFestivals(storedBirthProfile);
+
+        // History Panel
         const historyBox = document.getElementById("attentionBox");
         if (historyBox) {
             updateHistoryCardHeader();
-            
             historyBox.innerHTML = `
                 <div style="margin-bottom: 15px;">
                     <label style="display:block; font-size:0.85rem; opacity:0.7; margin-bottom:6px;">Enter History Date (DD-MM-YYYY):</label>
@@ -314,11 +258,6 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             }
         }
 
-        if (document.getElementById("luckyColor")) document.getElementById("luckyColor").innerText = dynamicForecast.guidance.luckyColor;
-        if (document.getElementById("luckyNumber")) document.getElementById("luckyNumber").innerText = dynamicForecast.guidance.luckyNumber;
-        if (document.getElementById("goodTime")) document.getElementById("goodTime").innerText = dynamicForecast.guidance.goodTime;
-        if (document.getElementById("badTime")) document.getElementById("badTime").innerText = dynamicForecast.guidance.badTime;
-
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         const mobNav = document.getElementById("mobile-navigation-bar");
         
@@ -342,7 +281,6 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             const cHistory = document.getElementById("card-history");
 
             if (cForecast) cForecast.style.display = 'block';
-            if (cImportant) cImportant.style.display = 'block';
             if (cHistory) cHistory.style.display = 'block';
         }
 
@@ -371,12 +309,15 @@ async function processManualHistoryLookup(profile, formattedDateString) {
         resultBox.style.color = "#fff";
         
         const processedHistory = filterWeekendJargon(historicalPayload.forecast, explicitHistoryDate);
-        resultBox.innerHTML = processedHistory.split('\n').join('<br>');
+        resultBox.innerHTML = processedHistory;
     } catch (err) {
         resultBox.innerText = "Error tracking historical metrics.";
     }
 }
 
+// -------------------------------------------------------------------------
+// User Interaction Handlers
+// -------------------------------------------------------------------------
 async function handleSubmit() {
     const dobInput = document.getElementById("dob").value; 
     const tobValue = document.getElementById("tob").value; 
@@ -441,23 +382,14 @@ async function handleConfirm() {
     try {
         localStorage.setItem("permanentBirthProfile", JSON.stringify(currentBirthProfile));
         
-        if (document.getElementById("confirmBtn")) document.getElementById("confirmBtn").style.display = "none";
-        if (document.getElementById("rejectBtn")) document.getElementById("rejectBtn").style.display = "none";
-        if (document.getElementById("resetBtn")) document.getElementById("resetBtn").style.display = "inline-block";
+        setProfileViewMode(true);
         
         const panelsContainer = document.getElementById("forecastAndAttentionPanels");
         if (panelsContainer) {
-            panelsContainer.style.display = "grid";
+            panelsContainer.style.display = (window.innerWidth <= 768) ? "block" : "grid";
         }
 
-        const historyBox = document.getElementById("attentionBox"); 
-        if (historyBox) {
-            updateHistoryCardHeader();
-        }
-
-        adjustMobileInitialPanelVisibility(true);
         await renderUserDashboard(currentBirthProfile, new Date());
-
     } catch (err) {
         alert("Error executing profile save: " + err.message);
     }
@@ -531,6 +463,9 @@ function initializeGalaxyStarfield() {
     animate();
 }
 
+// -------------------------------------------------------------------------
+// DOM Initialization
+// -------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
     initializeGalaxyStarfield();
     loadStoredProfileAndRender();
@@ -539,16 +474,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("confirmBtn")?.addEventListener("click", handleConfirm);
     document.getElementById("rejectBtn")?.addEventListener("click", handleReject);
     document.getElementById("resetBtn")?.addEventListener("click", handleReset);
-    // Q&A Get Answer Button Listener
-    document.getElementById("guideQnaBtn")?.addEventListener("click", processGuideQuestion);
-
-    // Allow pressing 'Enter' in textarea to trigger answer
-    document.getElementById("guideQnaInput")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            processGuideQuestion();
-        }
-    });
+    
+    // DOB Auto-hyphenation listener
     const dobInput = document.getElementById("dob");
     if (dobInput) {
         dobInput.addEventListener("input", (e) => {
@@ -575,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // REFINED TOB HANDLER: Jump to City field ONLY when 5 full characters (HH:MM) are entered
+    // TOB Complete 5-Character Validation before shifting focus
     const tobInput = document.getElementById("tob");
     if (tobInput) {
         tobInput.addEventListener("change", () => {
@@ -586,6 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// Mobile Submenu Switching
 window.switchMobileTab = function(tabId) {
     if (window.innerWidth > 768) return; 
     
