@@ -1,6 +1,6 @@
 import { getBirthData } from "./birth_engine.js?v=103";
-import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=114";
-import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=114";
+import { generateTimeLockedForecast as generateDailyForecast } from "../Addons/js/time_lock_addon.js?v=130";
+import { generateTimeLockedForecast as generateHistoryForecast } from "../Addons/js/time_lock_addon.js?v=130";
 
 let currentBirthProfile = null;
 
@@ -339,7 +339,6 @@ async function renderUserDashboard(storedBirthProfile, targetDate = new Date()) 
             }
             
             const cForecast = document.getElementById("card-forecast");
-            const cImportant = document.getElementById("card-important");
             const cHistory = document.getElementById("card-history");
 
             if (cForecast) cForecast.style.display = 'block';
@@ -602,10 +601,8 @@ window.switchMobileTab = function(tabId) {
     });
 
     const forecastCard = document.getElementById("card-forecast");
-    const importantCard = document.getElementById("card-important");
     const historyCard = document.getElementById("card-history");
 
     if (forecastCard) forecastCard.style.display = (tabId === 'forecast') ? 'block' : 'none';
-    if (importantCard) importantCard.style.display = (tabId === 'important') ? 'block' : 'none';
     if (historyCard) historyCard.style.display = (tabId === 'history') ? 'block' : 'none';
 };
