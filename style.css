@@ -212,39 +212,14 @@ button:hover, .btn:hover {
    6. WIDESCREEN DESKTOP ENVIRONMENT LAYOUT RULES
    ========================================================================== */
 @media screen and (min-width: 769px) {
-    /* Top row configuration profiles */
-    .dashboard-row-three-columns {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        width: 100%;
-        margin-bottom: 20px;
-        align-items: start;
-    }
-
-    /* 3-Column Equidistant Bottom Row Config (Updated from 4 columns) */
+    /* Change repeat(3, 1fr) to repeat(2, 1fr) for bottom row */
     #forecastAndAttentionPanels {
         display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
+        grid-template-columns: repeat(2, 1fr) !important;
         gap: 20px !important;
         width: 100% !important;
         max-width: 100% !important;
         margin-top: 20px !important;
-    }
-    
-    /* Strict height leveling mechanics strictly for desktop grids */
-    #forecastAndAttentionPanels .card {
-        height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-    
-    #forecastAndAttentionPanels .card-body {
-        flex: 1 !important;
-    }
-
-    #mobile-navigation-bar {
-        display: none !important;
     }
 }
 

@@ -81,69 +81,47 @@
 
         <hr class="golden-dashboard-divider">
 
-        <!-- Mobile Submenu Navigation -->
-        <div id="mobile-navigation-bar" style="display: none; overflow-x: auto; white-space: nowrap; padding: 10px 5px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; -webkit-overflow-scrolling: touch;">
-            <button class="nav-tab" onclick="switchMobileTab('forecast')" style="background: none; border: none; color: #ffffff; padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer; font-weight: bold;">Forecast</button>
-            <button class="nav-tab" onclick="switchMobileTab('important')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">Guidance</button>
-            <button class="nav-tab" onclick="switchMobileTab('history')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">History</button>
+        <!-- Mobile Submenu Navigation (Cleaned down to 2 options: Forecast & History) -->
+<div id="mobile-navigation-bar" style="display: none; overflow-x: auto; white-space: nowrap; padding: 10px 5px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; -webkit-overflow-scrolling: touch;">
+    <button class="nav-tab" onclick="switchMobileTab('forecast')" style="background: none; border: none; color: #ffffff; padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer; font-weight: bold;">Forecast</button>
+    <button class="nav-tab" onclick="switchMobileTab('history')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">History</button>
+</div>
+
+<!-- Bottom Row Panels (Forecast + Combined Guidance, and History) -->
+<div id="forecastAndAttentionPanels" style="display: none; margin-top: 20px;">
+    
+    <!-- Combined Daily Forecast & Guidance Card -->
+    <div class="card" id="card-forecast">
+        <div class="card-header">
+            <h3>Daily Forecast</h3>
         </div>
+        <div class="card-body">
+            <!-- Forecast Text -->
+            <div id="forecastBox">Calculating coordinates...</div>
 
-        <!-- Bottom Row Panels (Forecast, Important Guide, History) -->
-        <div id="forecastAndAttentionPanels" style="display: none; margin-top: 20px;">
-            
-            <div class="card" id="card-forecast">
-                <div class="card-header">
-                    <h3>Daily Forecast</h3>
-                </div>
-                <div class="card-body">
-                    <div id="forecastBox">Calculating coordinates...</div>
-                </div>
+            <hr style="border: 0; border-top: 1px dashed rgba(255, 215, 0, 0.25); margin: 15px 0;">
+
+            <!-- Combined Guidance Details -->
+            <div id="guidanceBox" style="font-size: 0.95rem; line-height: 1.8;">
+                <div><strong style="color: #ffd700;">Lucky Color:</strong> <span id="luckyColor">-</span></div>
+                <div><strong style="color: #ffd700;">Lucky Time:</strong> <span id="goodTime">-</span></div>
+                <div><strong style="color: #ffd700;">Unlucky Time:</strong> <span id="badTime">-</span></div>
             </div>
-
-            <!-- PANEL 5: Important Guide -->
-            <div class="card" id="card-important">
-                <div class="card-header">
-                    <h3>Important Guide</h3>
-                </div>
-                <div class="card-body">
-                    <strong>Lucky Color:</strong> <span id="luckyColor">-</span><br>
-                    <strong>Lucky Number:</strong> <span id="luckyNumber">-</span><br>
-                    <strong>Favorable time:</strong> <span id="goodTime">-</span><br>
-                    <strong>Unfavorable time:</strong> <span id="badTime">-</span>
-
-                    <!-- Special Occasion / Festival Banner (Placed before Question Box) -->
-                    <div id="specialOccasionBox" style="display: none; margin-top: 15px; padding: 10px; background: rgba(202, 164, 55, 0.12); border: 1px dashed rgba(202, 164, 55, 0.4); border-radius: 6px;">
-                        <span id="festivalTitle" style="font-size: 0.92rem; font-weight: bold; color: #caa437;"></span><br>
-                        <span id="festivalDesc" style="font-size: 0.82rem; color: #e2e8f0;"></span>
-                    </div>
-
-                    <hr style="border: 0; border-top: 1px dashed rgba(255, 215, 0, 0.2); margin: 15px 0;">
-
-                    <!-- Q&A Section -->
-                    <div class="qna-section">
-                        <div style="font-size: 0.82rem; color: #ffd700; margin-bottom: 6px; font-style: italic;">
-                            💡 Ask any question related to Career, Family, Finance...
-                        </div>
-                        <textarea id="guideQnaInput" placeholder="Ask your question here..." style="width: 100%; height: 55px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 6px; color: #ffffff; padding: 8px; font-family: inherit; font-size: 0.9rem; resize: none; box-sizing: border-box; outline: none;"></textarea>
-                        <button id="guideQnaBtn" class="btn" style="width: 100%; margin-top: 8px; padding: 8px; background: #caa437; color: #060d1a; font-weight: bold; border-radius: 4px; cursor: pointer;">Get Answer</button>
-                        <div id="guideQnaResult" style="margin-top: 10px; font-size: 0.9rem; color: #ffffff; line-height: 1.5; display: none;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" id="card-history">
-                <div class="card-header">
-                    <h3>History</h3>
-                </div>
-                <div class="card-body">
-                    <div id="attentionBox"></div>
-                </div>
-            </div>
-            
         </div>
-
     </div>
 
-    <script type="module" src="js/index_app.js?v=115"></script>
+    <!-- History Panel -->
+    <div class="card" id="card-history">
+        <div class="card-header">
+            <h3>History</h3>
+        </div>
+        <div class="card-body">
+            <div id="attentionBox"></div>
+        </div>
+    </div>
+    
+</div>
+
+    <script type="module" src="js/index_app.js?v=130"></script>
 </body>
 </html>
