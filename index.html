@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nakshatra Guide Dashboard</title>
-    <link rel="stylesheet" href="style.css?v=115">
+    <link rel="stylesheet" href="style.css?v=132">
 </head>
 <body>
 
@@ -12,8 +12,21 @@
 
     <div class="dashboard-container">
         
-        <!-- Top Row 3-Panel Layout -->
-        <div class="dashboard-row-three-columns">
+        <!-- Center Branding Header -->
+        <div class="card branding-card-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-bottom: 20px;">
+            <div class="branding-image-container" style="max-height: 140px;">
+                <img src="ng head.jpg" alt="Nakshatra Guide Logo" class="scaled-panel-img">
+            </div>
+
+            <!-- Special Occasion / Festival Banner -->
+            <div id="specialOccasionBox" style="display: none; margin-top: 12px; padding: 10px; background: rgba(202, 164, 55, 0.12); border: 1px dashed rgba(202, 164, 55, 0.4); border-radius: 6px; width: 100%; box-sizing: border-box;">
+                <span id="festivalTitle" style="font-size: 0.92rem; font-weight: bold; color: #caa437;"></span><br>
+                <span id="festivalDesc" style="font-size: 0.82rem; color: #e2e8f0;"></span>
+            </div>
+        </div>
+
+        <!-- NEW USERS ONLY: Onboarding Container (DOB Form & Star Detection Card) -->
+        <div id="newUserDataRow" class="dashboard-row-three-columns" style="display: none; margin-bottom: 20px;">
             
             <!-- PANEL 1: Astrological Profile (DOB Input) -->
             <div class="card outlined-card" id="profileFormPanel">
@@ -43,14 +56,7 @@
                 </div>
             </div>
 
-            <!-- PANEL 2 (CENTER): Logo Only -->
-            <div class="card branding-card-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-                <div class="branding-image-container" style="max-height: 140px;">
-                    <img src="ng head.jpg" alt="Nakshatra Guide Logo" class="scaled-panel-img">
-                </div>
-            </div>
-
-            <!-- PANEL 3: Detected Nakshatra Panel -->
+            <!-- PANEL 2: Detected Nakshatra Panel (Only shown during onboarding) -->
             <div class="card outlined-card" id="detectedStatusPanel">
                 <div class="card-header">Detected Nakshatra</div>
                 <div class="card-body">
@@ -63,65 +69,51 @@
                         <div style="margin-top: 8px;">Zodiac Sign: <strong id="westernZodiac">-</strong></div>
                     </div>
 
-                    <!-- Animated Birthday Wish Banner (Placed below Western Sign & above Reset Button) -->
+                    <!-- Birthday Wish Banner -->
                     <div id="birthdayGreetingBox" style="display: none; margin-top: 15px; padding: 10px; background: rgba(255, 215, 0, 0.15); border: 1px solid rgba(255, 215, 0, 0.6); border-radius: 8px; text-align: center; animation: birthdayGlow 1.8s infinite ease-in-out;">
                         <span style="font-size: 1.05rem; font-weight: bold; color: #ffd700;">🎂 Happy Birthday!</span><br>
                         <span style="font-size: 0.82rem; color: #ffffff;">May the transits bring light & progress for your solar return year.</span>
                     </div>
                     
                     <div class="action-buttons-group" style="margin-top: 20px;">
-                        <button id="confirmBtn" style="display: none;" class="btn confirm-btn">Confirm</button>
+                        <button id="confirmBtn" style="display: none;" class="btn confirm-btn">Confirm Details</button>
                         <button id="rejectBtn" style="display: none;" class="btn reject-btn">Reject</button>
-                        <button id="resetBtn" style="display: none;" class="btn reset-btn" style="width: 100%;">Reset Profile</button>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <hr class="golden-dashboard-divider">
+        <!-- MAIN ACTIVE PANEL: Daily Forecast & Combined Guidance -->
+        <div id="forecastContainer" style="display: none; max-width: 850px; margin: 0 auto 30px auto;">
+            <div class="card" id="card-forecast">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">Daily Forecast</h3>
+                    <span id="forecastDateBadge" style="font-size: 0.88rem; color: #ffd700; font-weight: bold;"></span>
+                </div>
+                <div class="card-body">
+                    <!-- Clean Single-Paragraph Forecast (Caution Stripped) -->
+                    <div id="forecastBox" style="font-size: 1.05rem; line-height: 1.7;">Calculating coordinates...</div>
 
-        <!-- Mobile Submenu Navigation (Cleaned down to 2 options: Forecast & History) -->
-<div id="mobile-navigation-bar" style="display: none; overflow-x: auto; white-space: nowrap; padding: 10px 5px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; -webkit-overflow-scrolling: touch;">
-    <button class="nav-tab" onclick="switchMobileTab('forecast')" style="background: none; border: none; color: #ffffff; padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer; font-weight: bold;">Forecast</button>
-    <button class="nav-tab" onclick="switchMobileTab('history')" style="background: none; border: none; color: rgba(255,255,255,0.6); padding: 8px 16px; font-family: inherit; font-size: 1rem; cursor: pointer;">History</button>
-</div>
+                    <hr style="border: 0; border-top: 1px dashed rgba(255, 215, 0, 0.25); margin: 20px 0 15px 0;">
 
-<!-- Bottom Row Panels (Forecast + Combined Guidance, and History) -->
-<div id="forecastAndAttentionPanels" style="display: none; margin-top: 20px;">
-    
-    <!-- Combined Daily Forecast & Guidance Card -->
-    <div class="card" id="card-forecast">
-        <div class="card-header">
-            <h3>Daily Forecast</h3>
-        </div>
-        <div class="card-body">
-            <!-- Forecast Text -->
-            <div id="forecastBox">Calculating coordinates...</div>
+                    <!-- Combined Guidance Metrics -->
+                    <div id="guidanceBox" style="font-size: 0.95rem; line-height: 2;">
+                        <div><strong style="color: #ffd700;">Lucky Color:</strong> <span id="luckyColor">-</span></div>
+                        <div><strong style="color: #ffd700;">Lucky Time:</strong> <span id="goodTime">-</span></div>
+                        <div><strong style="color: #ffd700;">Unlucky Time:</strong> <span id="badTime">-</span></div>
+                    </div>
 
-            <hr style="border: 0; border-top: 1px dashed rgba(255, 215, 0, 0.25); margin: 15px 0;">
-
-            <!-- Combined Guidance Details -->
-            <div id="guidanceBox" style="font-size: 0.95rem; line-height: 1.8;">
-                <div><strong style="color: #ffd700;">Lucky Color:</strong> <span id="luckyColor">-</span></div>
-                <div><strong style="color: #ffd700;">Lucky Time:</strong> <span id="goodTime">-</span></div>
-                <div><strong style="color: #ffd700;">Unlucky Time:</strong> <span id="badTime">-</span></div>
+                    <!-- Subtle Reset Profile Option for returning users -->
+                    <div style="margin-top: 25px; text-align: right; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 10px;">
+                        <button id="resetProfileLink" style="background: none; border: none; color: rgba(255, 255, 255, 0.5); cursor: pointer; font-size: 0.82rem; text-decoration: underline; padding: 0;">Reset profile & re-enter details</button>
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
 
-    <!-- History Panel -->
-    <div class="card" id="card-history">
-        <div class="card-header">
-            <h3>History</h3>
-        </div>
-        <div class="card-body">
-            <div id="attentionBox"></div>
-        </div>
-    </div>
-    
-</div>
-
-    <script type="module" src="js/index_app.js?v=130"></script>
+    <script type="module" src="js/index_app.js?v=140"></script>
 </body>
 </html>
