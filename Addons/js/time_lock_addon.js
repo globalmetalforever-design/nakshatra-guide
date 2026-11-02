@@ -9,13 +9,13 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     if (!birthProfile || !birthProfile.nakshatra) {
         return {
             forecast: "Please enter your birth profile details.",
-            guidance: { luckyColor: "-", luckyNumber: "-", goodTime: "-", badTime: "-", action: "-" }
+            guidance: { luckyColor: "-", goodTime: "-", badTime: "-" }
         };
     }
 
     const swe = await getSwiss();
 
-    // 1. Fetch current planetary positions
+    // 1. Planetary Transits
     const nodes = await calculateNodesTransit(targetDate);
     const planets = await calculateMajorPlanetsTransit(targetDate);
     
@@ -23,11 +23,8 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     const targetMonth = targetDate.getMonth() + 1;
     const targetDay = targetDate.getDate();
     
-    // Weekend check
     const dayOfWeek = targetDate.getDay();
     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-    
-    // CALIBRATED TO MIDNIGHT IST
     const targetHourUTC = -5.5; 
 
     const julianDay = swe.julday(targetYear, targetMonth, targetDay, targetHourUTC);
@@ -50,7 +47,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     const transitNakshatraIndex = Math.floor(transitMoonLong / (360 / 27));
     const seed = (targetDay + targetMonth * 7 + (birthProfile.inputs?.day || 1)) % 100;
 
-    // --- 1. CAREER EVALUATION ---
+    // Career Score
     let careerScore = 0;
     if ([3, 6, 10, 11].includes(houseMap.sun)) careerScore += checkPlanetaryVedha("sun", houseMap.sun, houseMap) ? 0 : 2; 
     else careerScore -= 1;
@@ -65,7 +62,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     if (careerScore >= 2) careerTier = "high";
     else if (careerScore <= -2) careerTier = "low";
 
-    // --- 2. FINANCE EVALUATION ---
+    // Finance Score
     let financeScore = 0;
     if ([2, 5, 7, 9, 11].includes(houseMap.jupiter)) financeScore += checkPlanetaryVedha("jupiter", houseMap.jupiter, houseMap) ? 0 : 3;
     else financeScore -= 2;
@@ -77,8 +74,7 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
     if (financeScore >= 2) financeTier = "high";
     else if (financeScore <= -2) financeTier = "low";
 
-    // --- EXTRACT CONCISE SENTENCES FROM PHRASE BANK ---
-    // Take the primary sentence from each section without long trailing extensions
+    // Build Concise Sentences
     const careerPool = PHRASE_BANK.career[careerTier] || [];
     const rawCareer = careerPool[seed % careerPool.length] || "A steady rhythm supports your key efforts today.";
     const careerCoreSentence = rawCareer.split('.')[0] + ".";
@@ -96,71 +92,26 @@ export async function generateTimeLockedForecast(birthProfile, targetDate = new 
         emotionalSentence = rawFam.split('.')[0] + ".";
     }
 
-    // --- PARAGRAPH 1: CONCISE BLENDED SUMMARY (NO HEADINGS) ---
-    let mainParagraph = "";
+    let singleParagraphForecast = "";
     if (isWeekend) {
-        mainParagraph = `Step back from professional pressure today and give your energy room to recharge. ${financeCoreSentence} ${emotionalSentence}`;
+        singleParagraphForecast = `Step back from professional pressure today and give your energy room to recharge. ${financeCoreSentence} ${emotionalSentence}`;
     } else {
-        mainParagraph = `${careerCoreSentence} ${financeCoreSentence} ${emotionalSentence}`;
+        singleParagraphForecast = `${careerCoreSentence} ${financeCoreSentence} ${emotionalSentence}`;
     }
-
-    // --- PARAGRAPH 2: CAUTION SUB-HEAD ---
-    const sunMarsDiff = Math.abs(planets.sun.longitude - planets.mars.longitude);
-    const isWesternAspectTense = (sunMarsDiff >= 85 && sunMarsDiff <= 95) || (sunMarsDiff >= 175 && sunMarsDiff <= 185);
-
-    let cautionBody = "";
-    if (isWesternAspectTense) {
-        cautionBody = "Spikes in impatience are likely today; pause before reacting and avoid entering unnecessary disputes.";
-    } else if ([12, 1, 2].includes(houseMap.saturn)) {
-        cautionBody = "Delays or bureaucratic sluggishness may test your patience; stay steady and avoid rushing critical details.";
-    } else {
-        const cautionPool = PHRASE_BANK.caution || [];
-        const rawCaution = cautionPool[(seed + 3) % cautionPool.length] || "Guard your inner peace and verify details before making firm commitments.";
-        cautionBody = rawCaution.split('.')[0] + ".";
-    }
-
-    // 2-Day Ahead Transit Warning Alert Check
-    const futureDate = new Date(targetDate);
-    futureDate.setDate(futureDate.getDate() + 2);
-    const futurePlanets = await calculateMajorPlanetsTransit(futureDate);
-    const futureSunMarsDiff = Math.abs(futurePlanets.sun.longitude - futurePlanets.mars.longitude);
-    const isFutureTense = (futureSunMarsDiff >= 85 && futureSunMarsDiff <= 95) || (futureSunMarsDiff >= 175 && futureSunMarsDiff <= 185);
-
-    if (isFutureTense) {
-        cautionBody = `A tense planetary shift is approaching over the next 48 hours. Wrap up important tasks early. ${cautionBody}`;
-    }
-
-    if (isWeekend) {
-        cautionBody += " Keep work-related anxieties away from your personal sanctuary.";
-    }
-
-    const cautionParagraph = `<span style="font-weight: bold; text-decoration: underline; color: #ffd700;">CAUTION:</span> ${cautionBody}`;
-
-    // Combine into two paragraphs separated by a paragraph break
-    const formattedForecast = `<p style="margin: 0 0 12px 0; line-height: 1.6;">${mainParagraph}</p><p style="margin: 0; line-height: 1.6;">${cautionParagraph}</p>`;
-
-    // --- GUIDANCE METRICS ---
-    const spiritPool = PHRASE_BANK.spirituality || [];
-    const rawRemedy = spiritPool[seed % spiritPool.length] || "Take 2 minutes of quiet breathing to align your focus.";
-    const remedyText = rawRemedy.split('.')[0] + ".";
 
     const guidanceMetrics = addonComputeGuidance(
         birthProfile.nakshatra.number, 
         transitNakshatraIndex, 
-        careerTier, 
-        financeTier, 
-        isWesternAspectTense ? "Risk Alert" : "Clear", 
-        "", 
-        remedyText
+        careerTier
     );
 
     return {
-        forecast: formattedForecast,
+        forecast: `<p style="margin: 0; line-height: 1.7;">${singleParagraphForecast}</p>`,
         guidance: guidanceMetrics
     };
 }
 
-function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTier, financeTier, transitStatusText, transitTipsText, cautionNoteText) {
+function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTier) {
     const transitNakshatraNum = transitBakshatraIndex + 1;
     const distance = ((transitNakshatraNum - birthNakshatraNum + 27) % 27) + 1;
     const score = (distance % 9) || 9;
@@ -190,11 +141,7 @@ function addonComputeGuidance(birthNakshatraNum, transitBakshatraIndex, careerTi
 
     return {
         luckyColor: dynamicColor,
-        luckyNumber: isFavorable ? String((score * 3) % 9 || 9) : String((score * 2) % 7 || 3),
         goodTime: goodTimeStr,
-        badTime: badTimeStr,
-        transitStatus: transitStatusText,
-        transitTips: transitTipsText,
-        cautionNote: cautionNoteText
+        badTime: badTimeStr
     };
 }
